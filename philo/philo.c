@@ -48,7 +48,10 @@ void	*start_routine(void *info_void)
 		gettimeofday(&timeval, NULL);
 		now = timeval_to_ms(timeval);
 		if (now > last_ate + shared->time_to_die)
+		{
 			shared->one_dead = 1;
+			printf("%ld %d died\n", now, info->philo_i + 1);
+		}
 		if (forks_in_hand == 2)
 		{
 			printf("%ld %d is eating\n", now, info->philo_i + 1);
@@ -59,10 +62,17 @@ void	*start_routine(void *info_void)
 			forks_in_hand = 0;
 			gettimeofday(&timeval, NULL);
 			now = timeval_to_ms(timeval);
+			if (shared->one_dead)
+				break;
 			printf("%ld %d is thinking\n", now, info->philo_i + 1);
 			continue;
 		}
 		pthread_mutex_lock(&shared->butler);
+		if (shared->one_dead)
+		{
+			pthread_mutex_unlock(&shared->butler);
+			break;
+		}
 		pthread_mutex_lock(&shared->forks[info->philo_i]);
 		gettimeofday(&timeval, NULL);
 		now = timeval_to_ms(timeval);
@@ -73,6 +83,11 @@ void	*start_routine(void *info_void)
 		printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
 		forks_in_hand = 2;
 		pthread_mutex_unlock(&shared->butler);
+	}
+	if (forks_in_hand == 2)
+	{
+		pthread_mutex_unlock(&shared->forks[info->philo_i]);
+		pthread_mutex_unlock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]);
 	}
 	return (NULL);
 }
@@ -124,6 +139,7 @@ int	main(int argc, char **argv)
 		;
 	i = 0;
 	printf("finished!\n");
+	usleep(shared.time_to_die * shared.number_of_philosophers * 2);
 	while (i < shared.number_of_philosophers)
 	{
 		pthread_join(threads[i], NULL);
