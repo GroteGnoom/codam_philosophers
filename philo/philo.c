@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 typedef struct s_shared {
 	int	number_of_philosophers;
@@ -12,6 +13,7 @@ typedef struct s_shared {
 	int	number_of_times_each_philosopher_must_eat;
 	volatile int	one_dead;
 	pthread_mutex_t	*forks;
+	pthread_mutex_t butler;
 } t_shared;
 
 typedef struct s_info {
@@ -40,13 +42,37 @@ void	*start_routine(void *info_void)
 
 	last_ate = timeval_to_ms(timeval);
 
-	printf("hoi! I'm %d, %d, %d\n", info->philo_i, shared->number_of_philosophers, shared->time_to_die);
+	printf("hi! I'm %d, %d, %d\n", info->philo_i + 1, shared->number_of_philosophers, shared->time_to_die);
 	while (!shared->one_dead)
 	{
 		gettimeofday(&timeval, NULL);
 		now = timeval_to_ms(timeval);
 		if (now > last_ate + shared->time_to_die)
 			shared->one_dead = 1;
+		if (forks_in_hand == 2)
+		{
+			printf("%ld %d is eating\n", now, info->philo_i + 1);
+			last_ate = now;
+			usleep(shared->time_to_eat * 1000);
+			pthread_mutex_unlock(&shared->forks[info->philo_i]);
+			pthread_mutex_unlock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]);
+			forks_in_hand = 0;
+			gettimeofday(&timeval, NULL);
+			now = timeval_to_ms(timeval);
+			printf("%ld %d is thinking\n", now, info->philo_i + 1);
+			continue;
+		}
+		pthread_mutex_lock(&shared->butler);
+		pthread_mutex_lock(&shared->forks[info->philo_i]);
+		gettimeofday(&timeval, NULL);
+		now = timeval_to_ms(timeval);
+		printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
+		pthread_mutex_lock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]);
+		gettimeofday(&timeval, NULL);
+		now = timeval_to_ms(timeval);
+		printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
+		forks_in_hand = 2;
+		pthread_mutex_unlock(&shared->butler);
 	}
 	return (NULL);
 }
@@ -85,6 +111,7 @@ int	main(int argc, char **argv)
 		pthread_mutex_init(shared.forks + i, NULL);
 		i++;
 	}
+	pthread_mutex_init(&shared.butler, NULL);
 	i = 0;
 	while (i < shared.number_of_philosophers)
 	{
