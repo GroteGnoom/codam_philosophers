@@ -21,9 +21,40 @@ typedef struct s_info {
 	int	philo_i;
 } t_info;
 
+enum error {
+	SUCCESS,
+	ERROR
+};
+
 long	timeval_to_ms(struct timeval timeval)
 {
 	return ((long)timeval.tv_sec * 1000 + timeval.tv_usec / 1000);
+}
+
+long	get_time()
+{
+	struct timeval	timeval;
+
+	gettimeofday(&timeval, NULL);
+	return (timeval_to_ms(timeval));
+}
+
+int	take_forks(t_shared *shared, t_info *info, int *forks_in_hand)
+{
+	long now;
+
+	if (pthread_mutex_lock(&shared->forks[info->philo_i]))
+		return (ERROR);
+	now = get_time();
+	printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
+	if (pthread_mutex_lock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]))
+		return (ERROR);
+	now = get_time();
+	printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
+	if (pthread_mutex_unlock(&shared->butler))
+		return (ERROR);
+	*forks_in_hand = 2;
+	return (SUCCESS);
 }
 
 void	*start_routine(void *info_void)
@@ -31,22 +62,18 @@ void	*start_routine(void *info_void)
 	t_shared	*shared;
 	int			forks_in_hand;
 	long		last_ate;
-	struct timeval	timeval;
 	t_info		*info;
 	long		now;
 
 	info = info_void;
 	shared = info->shared;
 	forks_in_hand = 0;
-	gettimeofday(&timeval, NULL);
-
-	last_ate = timeval_to_ms(timeval);
+	last_ate = get_time();
 
 	printf("hi! I'm %d, %d, %d\n", info->philo_i + 1, shared->number_of_philosophers, shared->time_to_die);
 	while (!shared->one_dead)
 	{
-		gettimeofday(&timeval, NULL);
-		now = timeval_to_ms(timeval);
+		now = get_time();
 		if (now > last_ate + shared->time_to_die)
 		{
 			shared->one_dead = 1;
@@ -60,8 +87,7 @@ void	*start_routine(void *info_void)
 			pthread_mutex_unlock(&shared->forks[info->philo_i]);
 			pthread_mutex_unlock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]);
 			forks_in_hand = 0;
-			gettimeofday(&timeval, NULL);
-			now = timeval_to_ms(timeval);
+			now = get_time();
 			if (shared->one_dead)
 				break;
 			printf("%ld %d is thinking\n", now, info->philo_i + 1);
@@ -73,16 +99,8 @@ void	*start_routine(void *info_void)
 			pthread_mutex_unlock(&shared->butler);
 			break;
 		}
-		pthread_mutex_lock(&shared->forks[info->philo_i]);
-		gettimeofday(&timeval, NULL);
-		now = timeval_to_ms(timeval);
-		printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
-		pthread_mutex_lock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]);
-		gettimeofday(&timeval, NULL);
-		now = timeval_to_ms(timeval);
-		printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
-		forks_in_hand = 2;
-		pthread_mutex_unlock(&shared->butler);
+		if (take_forks(shared, info, &forks_in_hand))
+			return (NULL);
 	}
 	if (forks_in_hand == 2)
 	{
@@ -92,49 +110,86 @@ void	*start_routine(void *info_void)
 	return (NULL);
 }
 
+enum error initialize_shared(t_shared *shared, int argc, char **argv)
+{
+	shared->number_of_philosophers = ft_atoi(argv[1]);
+	shared->time_to_die = ft_atoi(argv[2]);
+	shared->time_to_eat = ft_atoi(argv[3]);
+	shared->time_to_sleep = ft_atoi(argv[4]);
+	if (argc == 6)
+	{
+		shared->number_of_times_each_philosopher_must_eat = ft_atoi(argv[5]);
+		if (shared->number_of_times_each_philosopher_must_eat < 0)
+			return (ERROR);
+	}
+	else
+		shared->number_of_times_each_philosopher_must_eat = -1;
+	shared->one_dead = 0;
+	shared->forks = malloc(sizeof(*shared->forks) * shared->number_of_philosophers);
+	return (SUCCESS);
+}
+
+int initialize_mutexes(t_shared *shared)
+{
+	int	i;
+	int	err;
+	
+	i = 0;
+	while (i < shared->number_of_philosophers)
+	{
+		err = pthread_mutex_init(shared->forks + i, NULL);
+		if (err)
+			return (err);
+		i++;
+	}
+	err = pthread_mutex_init(&shared->butler, NULL);
+	if (err)
+		return (err);
+	return (SUCCESS);
+}
+
+int	initialize_threads(t_shared *shared, t_info *info, pthread_t *threads)
+{
+	int	i;
+	int	err;
+
+	i = 0;
+	while (i < shared->number_of_philosophers)
+	{
+		info[i].shared = shared;
+		info[i].philo_i = i;
+		err = pthread_create(threads + i, NULL, start_routine, &info[i]);
+		if (err)
+			return (err);
+		i++;
+	}
+	return (SUCCESS);
+}
+
 int	main(int argc, char **argv)
 {
 	t_shared	shared;
 	pthread_t	*threads;
 	int	i;
 	t_info		*info;
+	enum error	err;
 
-	setbuf(stdout, NULL); //TODO remove
+	//setbuf(stdout, NULL); //TODO remove
 	printf("voor arg check\n");
 	if (argc < 5 || argc > 6)
 		return (1);
 	printf("na arg check\n");
-	shared.number_of_philosophers = ft_atoi(argv[1]);
-	shared.time_to_die = ft_atoi(argv[2]);
-	shared.time_to_eat = ft_atoi(argv[3]);
-	shared.time_to_sleep = ft_atoi(argv[4]);
-	if (argc == 6)
-	{
-		shared.number_of_times_each_philosopher_must_eat = ft_atoi(argv[5]);
-		if (shared.number_of_times_each_philosopher_must_eat < 0)
-			return (1);
-	}
-	else
-		shared.number_of_times_each_philosopher_must_eat = -1;
-	shared.one_dead = 0;
-	threads = malloc(sizeof(*threads) * shared.number_of_philosophers);
-	shared.forks = malloc(sizeof(*shared.forks) * shared.number_of_philosophers);
+	err = initialize_shared(&shared, argc, argv);
+	if (err)
+		return (err);
+	threads = malloc(sizeof(pthread_t) * shared.number_of_philosophers);
 	info = malloc(sizeof(*info) * shared.number_of_philosophers);
-	i = 0;
-	while (i < shared.number_of_philosophers)
-	{
-		pthread_mutex_init(shared.forks + i, NULL);
-		i++;
-	}
-	pthread_mutex_init(&shared.butler, NULL);
-	i = 0;
-	while (i < shared.number_of_philosophers)
-	{
-		info[i].shared = &shared;
-		info[i].philo_i = i;
-		pthread_create(threads + i, NULL, start_routine, &info[i]);
-		i++;
-	}
+	err = initialize_mutexes(&shared);
+	if (err)
+		return (err);
+	err = initialize_threads(&shared, info, threads);
+	if (err)
+		return (err);
 	while (!shared.one_dead)
 		;
 	i = 0;
