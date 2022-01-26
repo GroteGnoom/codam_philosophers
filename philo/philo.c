@@ -138,8 +138,11 @@ int die(t_shared *shared, t_info *info, long now)
 	shared->one_dead = 1;
 	if (ft_mutex_lock(&shared->print_butler))
 		return (ERROR);
-	shared->allowed_to_print = 0;
-	printf("%ld %d died\n", now, info->philo_i + 1);
+	if (shared->allowed_to_print)
+	{
+		shared->allowed_to_print = 0;
+		printf("%ld %d died\n", now, info->philo_i + 1);
+	}
 	if (ft_mutex_unlock(&shared->print_butler))
 		return (ERROR);
 	return (SUCCESS);
