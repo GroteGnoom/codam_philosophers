@@ -15,9 +15,11 @@ typedef struct s_shared {
 	int	time_to_eat;
 	int	time_to_sleep;
 	int	number_of_times_each_philosopher_must_eat;
+	int	allowed_to_print;
 	volatile int	one_dead;
 	pthread_mutex_t	*forks;
 	pthread_mutex_t butler;
+	pthread_mutex_t print_butler;
 } t_shared;
 
 typedef struct s_info {
@@ -82,11 +84,17 @@ int	take_forks(t_shared *shared, t_info *info, int *forks_in_hand)
 	if (ft_mutex_lock(&shared->forks[info->philo_i]))
 		return (ERROR);
 	now = get_time();
-	printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
+	pthread_mutex_lock(&shared->print_butler);
+	if (info->shared->allowed_to_print)
+		printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
+	pthread_mutex_unlock(&shared->print_butler);
 	if (ft_mutex_lock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]))
 		return (ERROR);
 	now = get_time();
-	printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
+	pthread_mutex_lock(&shared->print_butler);
+	if (info->shared->allowed_to_print)
+		printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
+	pthread_mutex_unlock(&shared->print_butler);
 	if (pthread_mutex_unlock(&shared->butler))
 		return (ERROR);
 	*forks_in_hand = 2;
@@ -104,10 +112,14 @@ void start_activity(enum activity new_activity, enum activity *activity,
 {
 	static char	*words[] = {"eating", "sleeping", "thinking"};
 	long		now;
+	t_shared	*shared = info->shared;
 
 	now=get_time();
 	*activity = new_activity;
-	printf("%ld %d is %s\n", now, info->philo_i + 1, words[*activity]);
+	pthread_mutex_lock(&shared->print_butler);
+	if (info->shared->allowed_to_print)
+		printf("%ld %d is %s\n", now, info->philo_i + 1, words[*activity]);
+	pthread_mutex_unlock(&shared->print_butler);
 	*activity_started = now;
 }
 
@@ -136,11 +148,10 @@ void	*start_routine(void *info_void)
 	forks_in_hand = 0;
 	now = get_time();
 	last_ate = now;
-	activity = THINKING;
-	activity_started = now;
+	start_activity(THINKING, &activity, &activity_started, info);
 
 	printf("%ld %d is thinking\n", now, info->philo_i + 1);
-	printf("hi! I'm %d, %d, %d\n", info->philo_i + 1, shared->number_of_philosophers, shared->time_to_die);
+	//printf("hi! I'm %d, %d, %d\n", info->philo_i + 1, shared->number_of_philosophers, shared->time_to_die);
 	while (!shared->one_dead)
 	{
 		now = get_time();
@@ -148,15 +159,19 @@ void	*start_routine(void *info_void)
 		{
 			printf("now: %ld last_ate: %ld, ttd: %d\n", now, last_ate, shared->time_to_die);
 			shared->one_dead = 1;
+			pthread_mutex_lock(&shared->print_butler);
+			shared->allowed_to_print = 0;
 			printf("%ld %d died\n", now, info->philo_i + 1);
+			pthread_mutex_unlock(&shared->print_butler);
 			break;
 		}
 		if (activity == THINKING)
 		{
-			if (forks_in_hand == 2)
-				start_activity(EATING, &activity, &activity_started, info);
-			else if (take_forks(shared, info, &forks_in_hand))
-				return (NULL);
+			if (forks_in_hand != 2)
+				if (take_forks(shared, info, &forks_in_hand))
+					return (NULL);
+			start_activity(EATING, &activity, &activity_started, info);
+			last_ate = activity_started;
 		}
 		else if (activity == SLEEPING)
 		{
@@ -165,14 +180,10 @@ void	*start_routine(void *info_void)
 		} 
 		else if (activity == EATING)
 		{
-			last_ate = now;
 			if (now - activity_started > shared->time_to_eat)
 			{
 				if (drop_forks(shared, info, &forks_in_hand))
 					return (NULL);
-				ft_mutex_unlock(&shared->forks[info->philo_i]);
-				ft_mutex_unlock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]);
-				forks_in_hand = 0;
 				start_activity(SLEEPING, &activity, &activity_started, info);
 			}
 		}
@@ -219,6 +230,9 @@ int initialize_mutexes(t_shared *shared)
 	err = ft_mutex_init(&shared->butler);
 	if (err)
 		return (err);
+	err = ft_mutex_init(&shared->print_butler);
+	if (err)
+		return (err);
 	return (SUCCESS);
 }
 
@@ -260,6 +274,7 @@ int	main(int argc, char **argv)
 	err = initialize_mutexes(&shared);
 	if (err)
 		return (err);
+	shared.allowed_to_print = 1;
 	err = initialize_threads(&shared, info, threads);
 	if (err)
 		return (err);
