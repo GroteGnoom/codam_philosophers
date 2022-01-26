@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 13:42:44 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/26 13:50:24 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,8 +130,7 @@ int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 	return (SUCCESS);
 }
 
-int	start_activity(enum e_activity new_activity, enum e_activity *activity,
-		long *activity_started, t_philo *philo)
+int	start_activity(enum e_activity new_activity, t_philo *philo)
 {
 	static char	*words[] = {"is eating", "is sleeping", "is thinking"};
 	long		now;
@@ -139,10 +138,10 @@ int	start_activity(enum e_activity new_activity, enum e_activity *activity,
 
 	shared = philo->shared;
 	now = get_time();
-	*activity = new_activity;
-	if (checked_print(shared, philo, words[*activity]))
+	philo->activity = new_activity;
+	if (checked_print(shared, philo, words[philo->activity]))
 		return (ERROR);
-	*activity_started = now;
+	philo->activity_started = now;
 	return (SUCCESS);
 }
 
@@ -172,30 +171,32 @@ int	die(t_shared *shared, t_philo *philo, long now)
 	return (SUCCESS);
 }
 
-int check_death(t_shared *shared, t_philo *philo, long last_ate, enum e_activity activity)
+int	check_death(t_shared *shared, t_philo *philo, long last_ate)
 {
 	long	now;
 
 	now = get_time();
-	if (activity != EATING && now > last_ate + shared->time_to_die)
+	if (philo->activity != EATING && now > last_ate + shared->time_to_die)
 	{
-		printf("now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n", now, last_ate, shared->time_to_die, now - (last_ate + shared->time_to_die));
+		/*printf("now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n",
+		 * now, last_ate, shared->time_to_die,
+		 * now - (last_ate + shared->time_to_die));*/
 		die(shared, philo, now);
 		return (ERROR);
 	}
 	return (SUCCESS);
 }
 
-int check_thinking(t_shared *shared, t_philo *philo, long *activity_started, enum e_activity *activity, long *last_ate)
+int	check_thinking(t_shared *shared, t_philo *philo)
 {
-	if (*activity == THINKING)
+	if (philo->activity == THINKING)
 	{
 		if (philo->forks_in_hand != 2)
 			if (take_forks(shared, philo, &philo->forks_in_hand))
 				return (ERROR);
-		if (start_activity(EATING, activity, activity_started, philo))
+		if (start_activity(EATING, philo))
 			return (ERROR);
-		*last_ate = *activity_started;
+		philo->last_ate = philo->activity_started;
 	}
 	return (SUCCESS);
 }
@@ -211,32 +212,32 @@ void	*start_routine(void *philo_void)
 	philo->forks_in_hand = 0;
 	now = get_time();
 	philo->last_ate = now;
-	start_activity(THINKING, &philo->activity, &philo->activity_started, philo);
-
+	start_activity(THINKING, philo);
 	printf("%ld %d is thinking\n", now, philo->philo_i + 1);
-	/*printf("hi! I'm %d, %d, %d\n", philo->philo_i + 1, shared->number_of_philosophers, shared->time_to_die);*/
+	/*printf("hi! I'm %d, %d, %d\n", philo->philo_i + 1, 
+	 * shared->number_of_philosophers, shared->time_to_die);*/
 	while (!shared->one_dead)
 	{
 		now = get_time();
-		if (check_death(shared, philo, philo->last_ate, philo->activity))
-			break;
+		if (check_death(shared, philo, philo->last_ate))
+			break ;
 		usleep(1000);
-		if (check_death(shared, philo, philo->last_ate, philo->activity))
-			break;
-		if (check_thinking(shared, philo, &philo->activity_started, &philo->activity, &philo->last_ate))
-			break;
+		if (check_death(shared, philo, philo->last_ate))
+			break ;
+		if (check_thinking(shared, philo))
+			break ;
 		else if (philo->activity == SLEEPING)
 		{
 			if (now - philo->activity_started > shared->time_to_sleep)
-				start_activity(THINKING, &philo->activity, &philo->activity_started, philo);
-		} 
+				start_activity(THINKING, philo);
+		}
 		else if (philo->activity == EATING)
 		{
 			if (now - philo->activity_started > shared->time_to_eat)
 			{
 				if (drop_forks(shared, philo, &philo->forks_in_hand))
 					return (NULL);
-				start_activity(SLEEPING, &philo->activity, &philo->activity_started, philo);
+				start_activity(SLEEPING, philo);
 			}
 		}
 	}
@@ -247,7 +248,7 @@ void	*start_routine(void *philo_void)
 	return (NULL);
 }
 
-enum e_error initialize_shared(t_shared *shared, int argc, char **argv)
+enum e_error	initialize_shared(t_shared *shared, int argc, char **argv)
 {
 	shared->number_of_philosophers = ft_atoi(argv[1]);
 	shared->time_to_die = ft_atoi(argv[2]);
@@ -262,15 +263,16 @@ enum e_error initialize_shared(t_shared *shared, int argc, char **argv)
 	else
 		shared->number_of_times_each_philosopher_must_eat = -1;
 	shared->one_dead = 0;
-	shared->forks = malloc(sizeof(*shared->forks) * shared->number_of_philosophers);
+	shared->forks = malloc(sizeof(*shared->forks)
+			* shared->number_of_philosophers);
 	return (SUCCESS);
 }
 
-int initialize_mutexes(t_shared *shared)
+int	initialize_mutexes(t_shared *shared)
 {
 	int	i;
 	int	err;
-	
+
 	i = 0;
 	while (i < shared->number_of_philosophers)
 	{
@@ -313,10 +315,8 @@ int	main(int argc, char **argv)
 	int			i;
 	t_philo		*philo;
 
-	printf("voor arg check\n");
 	if (argc < 5 || argc > 6)
 		return (1);
-	printf("na arg check\n");
 	if (initialize_shared(&shared, argc, argv))
 		return (ERROR);
 	threads = malloc(sizeof(pthread_t) * shared.number_of_philosophers);
