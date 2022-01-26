@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:47:01 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 16:59:14 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/26 17:01:01 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,8 @@ static void	alloc_shared(t_shared *shared)
 			* shared->number_of_philosophers);
 	shared->eaten = malloc(sizeof(*shared->eaten)
 			* shared->number_of_philosophers);
+	if (!shared->forks || !shared->forks_2 || !shared->eaten)
+		exit(1);
 }
 
 int	initialize_shared(t_shared *shared, int argc, char **argv)
