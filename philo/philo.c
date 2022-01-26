@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 13:53:17 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/26 14:35:11 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,7 +113,7 @@ int	checked_print(t_shared *shared, t_philo *philo, char *s)
 
 int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 {
-	if (pthread_mutex_lock(&shared->butler))
+	if (ft_mutex_lock(&shared->butler))
 		return (ERROR);
 	if (ft_mutex_lock(&shared->forks[philo->philo_i]))
 		return (ERROR);
@@ -124,7 +124,7 @@ int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 		return (ERROR);
 	if (checked_print(shared, philo, "has taken a fork"))
 		return (ERROR);
-	if (pthread_mutex_unlock(&shared->butler))
+	if (ft_mutex_unlock(&shared->butler))
 		return (ERROR);
 	*forks_in_hand = 2;
 	return (SUCCESS);
@@ -176,11 +176,13 @@ int	check_death(t_shared *shared, t_philo *philo, long last_ate)
 	long	now;
 
 	now = get_time();
+	/*
+	printf("id: %d, now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n", philo->philo_i + 1, now,
+			last_ate, shared->time_to_die,
+			now - (last_ate + shared->time_to_die));
+	*/
 	if (now > last_ate + shared->time_to_die)
 	{
-		/*printf("now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n",
-		 * now, last_ate, shared->time_to_die,
-		 * now - (last_ate + shared->time_to_die));*/
 		die(shared, philo, now);
 		return (ERROR);
 	}
@@ -194,6 +196,8 @@ int	check_thinking(t_shared *shared, t_philo *philo)
 		if (philo->forks_in_hand != 2)
 			if (take_forks(shared, philo, &philo->forks_in_hand))
 				return (ERROR);
+		if (check_death(shared, philo, philo->last_ate))
+			return (ERROR);
 		if (start_activity(EATING, philo))
 			return (ERROR);
 		philo->last_ate = philo->activity_started;
