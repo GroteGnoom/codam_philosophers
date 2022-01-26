@@ -84,17 +84,21 @@ int	take_forks(t_shared *shared, t_info *info, int *forks_in_hand)
 	if (ft_mutex_lock(&shared->forks[info->philo_i]))
 		return (ERROR);
 	now = get_time();
-	pthread_mutex_lock(&shared->print_butler);
+	if (ft_mutex_lock(&shared->print_butler))
+		return (ERROR);
 	if (info->shared->allowed_to_print)
 		printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
-	pthread_mutex_unlock(&shared->print_butler);
+	if (ft_mutex_unlock(&shared->print_butler))
+		return (ERROR);
 	if (ft_mutex_lock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]))
 		return (ERROR);
 	now = get_time();
-	pthread_mutex_lock(&shared->print_butler);
+	if (ft_mutex_lock(&shared->print_butler))
+		return (ERROR);
 	if (info->shared->allowed_to_print)
 		printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
-	pthread_mutex_unlock(&shared->print_butler);
+	if (ft_mutex_unlock(&shared->print_butler))
+		return (ERROR);
 	if (pthread_mutex_unlock(&shared->butler))
 		return (ERROR);
 	*forks_in_hand = 2;
@@ -107,7 +111,7 @@ enum activity {
 	THINKING
 };
 
-void start_activity(enum activity new_activity, enum activity *activity,
+int	start_activity(enum activity new_activity, enum activity *activity,
 		long *activity_started, t_info *info)
 {
 	static char	*words[] = {"eating", "sleeping", "thinking"};
@@ -116,11 +120,14 @@ void start_activity(enum activity new_activity, enum activity *activity,
 
 	now=get_time();
 	*activity = new_activity;
-	pthread_mutex_lock(&shared->print_butler);
+	if (ft_mutex_lock(&shared->print_butler))
+		return (ERROR);
 	if (info->shared->allowed_to_print)
 		printf("%ld %d is %s\n", now, info->philo_i + 1, words[*activity]);
-	pthread_mutex_unlock(&shared->print_butler);
+	if (ft_mutex_unlock(&shared->print_butler))
+		return (ERROR);
 	*activity_started = now;
+	return (SUCCESS);
 }
 
 int drop_forks(t_shared *shared, t_info *info, int *forks_in_hand)
@@ -148,6 +155,20 @@ int die(t_shared *shared, t_info *info, long now)
 	return (SUCCESS);
 }
 
+int check_death(t_shared *shared, t_info *info, long last_ate, enum activity activity)
+{
+	long	now;
+
+	now = get_time();
+	if (activity != EATING && now > last_ate + shared->time_to_die)
+	{
+		printf("now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n", now, last_ate, shared->time_to_die, now - (last_ate + shared->time_to_die));
+		die(shared, info, now);
+		return (ERROR);
+	}
+	return (SUCCESS);
+}
+
 void	*start_routine(void *info_void)
 {
 	t_shared		*shared;
@@ -170,20 +191,11 @@ void	*start_routine(void *info_void)
 	while (!shared->one_dead)
 	{
 		now = get_time();
-		if (activity != EATING && now > last_ate + shared->time_to_die)
-		{
-			printf("now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n", now, last_ate, shared->time_to_die, now - (last_ate + shared->time_to_die));
-			die(shared, info, now);
+		if (check_death(shared, info, last_ate, activity))
 			break;
-		}
 		usleep(1000);
-		now = get_time();
-		if (activity != EATING && now > last_ate + shared->time_to_die)
-		{
-			printf("now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n", now, last_ate, shared->time_to_die, now - (last_ate + shared->time_to_die));
-			die(shared, info, now);
+		if (check_death(shared, info, last_ate, activity))
 			break;
-		}
 		if (activity == THINKING)
 		{
 			if (forks_in_hand != 2)
