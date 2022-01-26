@@ -169,6 +169,20 @@ int check_death(t_shared *shared, t_info *info, long last_ate, enum activity act
 	return (SUCCESS);
 }
 
+int check_thinking(t_shared *shared, t_info *info, int *forks_in_hand, long *activity_started, enum activity *activity, long *last_ate)
+{
+	if (*activity == THINKING)
+	{
+		if (*forks_in_hand != 2)
+			if (take_forks(shared, info, forks_in_hand))
+				return (ERROR);
+		if (start_activity(EATING, activity, activity_started, info))
+			return (ERROR);
+		*last_ate = *activity_started;
+	}
+	return (SUCCESS);
+}
+
 void	*start_routine(void *info_void)
 {
 	t_shared		*shared;
@@ -187,7 +201,7 @@ void	*start_routine(void *info_void)
 	start_activity(THINKING, &activity, &activity_started, info);
 
 	printf("%ld %d is thinking\n", now, info->philo_i + 1);
-	//printf("hi! I'm %d, %d, %d\n", info->philo_i + 1, shared->number_of_philosophers, shared->time_to_die);
+	/*printf("hi! I'm %d, %d, %d\n", info->philo_i + 1, shared->number_of_philosophers, shared->time_to_die);*/
 	while (!shared->one_dead)
 	{
 		now = get_time();
@@ -196,14 +210,8 @@ void	*start_routine(void *info_void)
 		usleep(1000);
 		if (check_death(shared, info, last_ate, activity))
 			break;
-		if (activity == THINKING)
-		{
-			if (forks_in_hand != 2)
-				if (take_forks(shared, info, &forks_in_hand))
-					return (NULL);
-			start_activity(EATING, &activity, &activity_started, info);
-			last_ate = activity_started;
-		}
+		if (check_thinking(shared, info, &forks_in_hand, &activity_started, &activity, &last_ate))
+			break;
 		else if (activity == SLEEPING)
 		{
 			if (now - activity_started > shared->time_to_sleep)
