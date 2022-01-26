@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 15:55:02 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/26 16:18:52 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,10 +16,6 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <unistd.h>
-
-#ifndef DEBUG
-# define DEBUG 0
-#endif
 
 typedef struct s_shared {
 	int				number_of_philosophers;
@@ -33,6 +29,7 @@ typedef struct s_shared {
 	int				*forks_2;
 	pthread_mutex_t	butler;
 	pthread_mutex_t	print_butler;
+	int				*eaten;
 }	t_shared;
 
 enum e_activity {
@@ -198,13 +195,31 @@ int	check_death(t_shared *shared, t_philo *philo, long last_ate)
 	now = get_time();
 	if (now > last_ate + shared->time_to_die)
 	{
+		/*
 		printf("id: %d, now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n", philo->philo_i + 1, now,
 				last_ate, shared->time_to_die,
 				now - (last_ate + shared->time_to_die));
+				*/
 		die(shared, philo, now);
 		return (ERROR);
 	}
 	return (SUCCESS);
+}
+
+int	check_everybody_eaten(t_shared *shared)
+{
+	int i;
+
+	i = 0;
+	while (i < shared->number_of_philosophers)
+	{
+		if (shared->eaten[i] < shared->number_of_times_each_philosopher_must_eat)
+			return (SUCCESS);
+		i++;
+	}
+	shared->allowed_to_print = 0;
+	shared->one_dead = 1;
+	return (ERROR);
 }
 
 int	check_thinking(t_shared *shared, t_philo *philo)
@@ -222,6 +237,7 @@ int	check_thinking(t_shared *shared, t_philo *philo)
 				return (ERROR);
 			if (start_activity(EATING, philo))
 				return (ERROR);
+			shared->eaten[philo->philo_i] += 1;
 			philo->last_ate = philo->activity_started;
 		}
 	}
@@ -282,6 +298,8 @@ void	*start_routine(void *philo_void)
 	init_philo(philo_void, &shared, &philo);
 	while (!shared->one_dead)
 	{
+		if (check_everybody_eaten(shared))
+			break ;
 		if (check_death(shared, philo, philo->last_ate))
 			break ;
 		usleep(1000);
@@ -322,9 +340,14 @@ enum e_error	initialize_shared(t_shared *shared, int argc, char **argv)
 			* shared->number_of_philosophers);
 	shared->forks_2 = malloc(sizeof(*shared->forks_2)
 			* shared->number_of_philosophers);
+	shared->eaten = malloc(sizeof(*shared->eaten)
+			* shared->number_of_philosophers);
 	i = 0;
 	while (i < shared->number_of_philosophers)
-		shared->forks_2[i++] = 1;
+	{
+		shared->forks_2[i] = 1;
+		shared->eaten[i++] = 0;
+	}
 	return (SUCCESS);
 }
 
@@ -372,9 +395,11 @@ void	free_everything(t_shared shared, t_philo *philo, pthread_t *threads)
 {
 	free(shared.forks);
 	free(shared.forks_2);
+	free(shared.eaten);
 	free(philo);
 	free(threads);
 }
+
 int	main(int argc, char **argv)
 {
 	t_shared	shared;
