@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 13:30:12 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/26 13:42:44 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -97,30 +97,32 @@ int	ft_mutex_lock(pthread_mutex_t *mutex)
 	return (SUCCESS);
 }
 
-int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
+int	checked_print(t_shared *shared, t_philo *philo, char *s)
 {
 	long	now;
 
+	now = get_time();
+	if (ft_mutex_lock(&shared->print_butler))
+		return (ERROR);
+	if (philo->shared->allowed_to_print)
+		printf("%ld %d %s\n", now, philo->philo_i + 1, s);
+	if (ft_mutex_unlock(&shared->print_butler))
+		return (ERROR);
+	return (SUCCESS);
+}
+
+int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
+{
 	if (pthread_mutex_lock(&shared->butler))
 		return (ERROR);
 	if (ft_mutex_lock(&shared->forks[philo->philo_i]))
 		return (ERROR);
-	now = get_time();
-	if (ft_mutex_lock(&shared->print_butler))
+	if (checked_print(shared, philo, "has taken a fork"))
 		return (ERROR);
-	if (philo->shared->allowed_to_print)
-		printf("%ld %d has taken a fork\n", now, philo->philo_i + 1);
-	if (ft_mutex_unlock(&shared->print_butler))
+	if (ft_mutex_lock(&shared->forks[(philo->philo_i + 1)
+				% shared->number_of_philosophers]))
 		return (ERROR);
-	if (ft_mutex_lock(&shared->forks[(philo->philo_i + 1) %
-			shared->number_of_philosophers]))
-		return (ERROR);
-	now = get_time();
-	if (ft_mutex_lock(&shared->print_butler))
-		return (ERROR);
-	if (philo->shared->allowed_to_print)
-		printf("%ld %d has taken a fork\n", now, philo->philo_i + 1);
-	if (ft_mutex_unlock(&shared->print_butler))
+	if (checked_print(shared, philo, "has taken a fork"))
 		return (ERROR);
 	if (pthread_mutex_unlock(&shared->butler))
 		return (ERROR);
@@ -131,33 +133,31 @@ int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 int	start_activity(enum e_activity new_activity, enum e_activity *activity,
 		long *activity_started, t_philo *philo)
 {
-	static char	*words[] = {"eating", "sleeping", "thinking"};
+	static char	*words[] = {"is eating", "is sleeping", "is thinking"};
 	long		now;
-	t_shared	*shared = philo->shared;
+	t_shared	*shared;
 
-	now=get_time();
+	shared = philo->shared;
+	now = get_time();
 	*activity = new_activity;
-	if (ft_mutex_lock(&shared->print_butler))
-		return (ERROR);
-	if (philo->shared->allowed_to_print)
-		printf("%ld %d is %s\n", now, philo->philo_i + 1, words[*activity]);
-	if (ft_mutex_unlock(&shared->print_butler))
+	if (checked_print(shared, philo, words[*activity]))
 		return (ERROR);
 	*activity_started = now;
 	return (SUCCESS);
 }
 
-int drop_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
+int	drop_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 {
 	if (ft_mutex_unlock(&shared->forks[philo->philo_i]))
 		return (ERROR);
-	if (ft_mutex_unlock(&shared->forks[(philo->philo_i + 1) % shared->number_of_philosophers]))
+	if (ft_mutex_unlock(&shared->forks[(philo->philo_i + 1)
+				% shared->number_of_philosophers]))
 		return (ERROR);
 	*forks_in_hand = 0;
 	return (SUCCESS);
 }
 
-int die(t_shared *shared, t_philo *philo, long now)
+int	die(t_shared *shared, t_philo *philo, long now)
 {
 	shared->one_dead = 1;
 	if (ft_mutex_lock(&shared->print_butler))
