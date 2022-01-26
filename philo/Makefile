@@ -1,14 +1,20 @@
 NAME = philo
 SRC = philo.c ft_atoi.c
-ifndef DEBUG
-	FLAGS = -Wall -Wextra -Werror
+ifdef DEBUG
+	CC=clang
+	FLAGS = -Wall -Wextra -fsanitize=address -DDEBUG=1 -g
 else
-	FLAGS = -Wall -Wextra
+	CC=gcc
+	FLAGS = -Wall -Wextra -Werror
 endif
 
 all: $(NAME)
 
 $(NAME): $(SRC)
-	gcc $(FLAGS) $(SRC) -o $(NAME)
+	$(CC) $(FLAGS) $(SRC) -o $(NAME)
 
+fclean:
+	rm -f $(NAME)
+
+re: fclean all
 .PHONY: all 
