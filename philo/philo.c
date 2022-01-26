@@ -22,10 +22,20 @@ typedef struct s_shared {
 	pthread_mutex_t print_butler;
 } t_shared;
 
-typedef struct s_info {
-	t_shared *shared;
-	int	philo_i;
-} t_info;
+enum activity {
+	EATING,
+	SLEEPING,
+	THINKING
+};
+
+typedef struct s_philo {
+	t_shared		*shared;
+	int				philo_i;
+	enum activity	activity;
+	long			activity_started;
+	long			last_ate;
+	int				forks_in_hand;
+} t_philo;
 
 enum error {
 	SUCCESS,
@@ -75,28 +85,28 @@ int ft_mutex_lock(pthread_mutex_t *mutex)
 	return (SUCCESS);
 }
 
-int	take_forks(t_shared *shared, t_info *info, int *forks_in_hand)
+int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 {
 	long now;
 
 	if (pthread_mutex_lock(&shared->butler))
 		return (ERROR);
-	if (ft_mutex_lock(&shared->forks[info->philo_i]))
+	if (ft_mutex_lock(&shared->forks[philo->philo_i]))
 		return (ERROR);
 	now = get_time();
 	if (ft_mutex_lock(&shared->print_butler))
 		return (ERROR);
-	if (info->shared->allowed_to_print)
-		printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
+	if (philo->shared->allowed_to_print)
+		printf("%ld %d has taken a fork\n", now, philo->philo_i + 1);
 	if (ft_mutex_unlock(&shared->print_butler))
 		return (ERROR);
-	if (ft_mutex_lock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]))
+	if (ft_mutex_lock(&shared->forks[(philo->philo_i + 1) % shared->number_of_philosophers]))
 		return (ERROR);
 	now = get_time();
 	if (ft_mutex_lock(&shared->print_butler))
 		return (ERROR);
-	if (info->shared->allowed_to_print)
-		printf("%ld %d has taken a fork\n", now, info->philo_i + 1);
+	if (philo->shared->allowed_to_print)
+		printf("%ld %d has taken a fork\n", now, philo->philo_i + 1);
 	if (ft_mutex_unlock(&shared->print_butler))
 		return (ERROR);
 	if (pthread_mutex_unlock(&shared->butler))
@@ -105,42 +115,36 @@ int	take_forks(t_shared *shared, t_info *info, int *forks_in_hand)
 	return (SUCCESS);
 }
 
-enum activity {
-	EATING,
-	SLEEPING,
-	THINKING
-};
-
 int	start_activity(enum activity new_activity, enum activity *activity,
-		long *activity_started, t_info *info)
+		long *activity_started, t_philo *philo)
 {
 	static char	*words[] = {"eating", "sleeping", "thinking"};
 	long		now;
-	t_shared	*shared = info->shared;
+	t_shared	*shared = philo->shared;
 
 	now=get_time();
 	*activity = new_activity;
 	if (ft_mutex_lock(&shared->print_butler))
 		return (ERROR);
-	if (info->shared->allowed_to_print)
-		printf("%ld %d is %s\n", now, info->philo_i + 1, words[*activity]);
+	if (philo->shared->allowed_to_print)
+		printf("%ld %d is %s\n", now, philo->philo_i + 1, words[*activity]);
 	if (ft_mutex_unlock(&shared->print_butler))
 		return (ERROR);
 	*activity_started = now;
 	return (SUCCESS);
 }
 
-int drop_forks(t_shared *shared, t_info *info, int *forks_in_hand)
+int drop_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 {
-	if (ft_mutex_unlock(&shared->forks[info->philo_i]))
+	if (ft_mutex_unlock(&shared->forks[philo->philo_i]))
 		return (ERROR);
-	if (ft_mutex_unlock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]))
+	if (ft_mutex_unlock(&shared->forks[(philo->philo_i + 1) % shared->number_of_philosophers]))
 		return (ERROR);
 	*forks_in_hand = 0;
 	return (SUCCESS);
 }
 
-int die(t_shared *shared, t_info *info, long now)
+int die(t_shared *shared, t_philo *philo, long now)
 {
 	shared->one_dead = 1;
 	if (ft_mutex_lock(&shared->print_butler))
@@ -148,14 +152,14 @@ int die(t_shared *shared, t_info *info, long now)
 	if (shared->allowed_to_print)
 	{
 		shared->allowed_to_print = 0;
-		printf("%ld %d died\n", now, info->philo_i + 1);
+		printf("%ld %d died\n", now, philo->philo_i + 1);
 	}
 	if (ft_mutex_unlock(&shared->print_butler))
 		return (ERROR);
 	return (SUCCESS);
 }
 
-int check_death(t_shared *shared, t_info *info, long last_ate, enum activity activity)
+int check_death(t_shared *shared, t_philo *philo, long last_ate, enum activity activity)
 {
 	long	now;
 
@@ -163,73 +167,69 @@ int check_death(t_shared *shared, t_info *info, long last_ate, enum activity act
 	if (activity != EATING && now > last_ate + shared->time_to_die)
 	{
 		printf("now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n", now, last_ate, shared->time_to_die, now - (last_ate + shared->time_to_die));
-		die(shared, info, now);
+		die(shared, philo, now);
 		return (ERROR);
 	}
 	return (SUCCESS);
 }
 
-int check_thinking(t_shared *shared, t_info *info, int *forks_in_hand, long *activity_started, enum activity *activity, long *last_ate)
+int check_thinking(t_shared *shared, t_philo *philo, long *activity_started, enum activity *activity, long *last_ate)
 {
 	if (*activity == THINKING)
 	{
-		if (*forks_in_hand != 2)
-			if (take_forks(shared, info, forks_in_hand))
+		if (philo->forks_in_hand != 2)
+			if (take_forks(shared, philo, &philo->forks_in_hand))
 				return (ERROR);
-		if (start_activity(EATING, activity, activity_started, info))
+		if (start_activity(EATING, activity, activity_started, philo))
 			return (ERROR);
 		*last_ate = *activity_started;
 	}
 	return (SUCCESS);
 }
 
-void	*start_routine(void *info_void)
+void	*start_routine(void *philo_void)
 {
 	t_shared		*shared;
-	int				forks_in_hand;
-	long			last_ate;
-	t_info			*info;
+	t_philo			*philo;
 	long			now;
-	long			activity_started;
-	enum activity	activity;
 
-	info = info_void;
-	shared = info->shared;
-	forks_in_hand = 0;
+	philo = philo_void;
+	shared = philo->shared;
+	philo->forks_in_hand = 0;
 	now = get_time();
-	last_ate = now;
-	start_activity(THINKING, &activity, &activity_started, info);
+	philo->last_ate = now;
+	start_activity(THINKING, &philo->activity, &philo->activity_started, philo);
 
-	printf("%ld %d is thinking\n", now, info->philo_i + 1);
-	/*printf("hi! I'm %d, %d, %d\n", info->philo_i + 1, shared->number_of_philosophers, shared->time_to_die);*/
+	printf("%ld %d is thinking\n", now, philo->philo_i + 1);
+	/*printf("hi! I'm %d, %d, %d\n", philo->philo_i + 1, shared->number_of_philosophers, shared->time_to_die);*/
 	while (!shared->one_dead)
 	{
 		now = get_time();
-		if (check_death(shared, info, last_ate, activity))
+		if (check_death(shared, philo, philo->last_ate, philo->activity))
 			break;
 		usleep(1000);
-		if (check_death(shared, info, last_ate, activity))
+		if (check_death(shared, philo, philo->last_ate, philo->activity))
 			break;
-		if (check_thinking(shared, info, &forks_in_hand, &activity_started, &activity, &last_ate))
+		if (check_thinking(shared, philo, &philo->activity_started, &philo->activity, &philo->last_ate))
 			break;
-		else if (activity == SLEEPING)
+		else if (philo->activity == SLEEPING)
 		{
-			if (now - activity_started > shared->time_to_sleep)
-				start_activity(THINKING, &activity, &activity_started, info);
+			if (now - philo->activity_started > shared->time_to_sleep)
+				start_activity(THINKING, &philo->activity, &philo->activity_started, philo);
 		} 
-		else if (activity == EATING)
+		else if (philo->activity == EATING)
 		{
-			if (now - activity_started > shared->time_to_eat)
+			if (now - philo->activity_started > shared->time_to_eat)
 			{
-				if (drop_forks(shared, info, &forks_in_hand))
+				if (drop_forks(shared, philo, &philo->forks_in_hand))
 					return (NULL);
-				start_activity(SLEEPING, &activity, &activity_started, info);
+				start_activity(SLEEPING, &philo->activity, &philo->activity_started, philo);
 			}
 		}
 	}
 	ft_mutex_unlock(&shared->butler);
-	if (forks_in_hand == 2)
-		if (drop_forks(shared, info, &forks_in_hand))
+	if (philo->forks_in_hand == 2)
+		if (drop_forks(shared, philo, &philo->forks_in_hand))
 			return (NULL);
 	return (NULL);
 }
@@ -275,7 +275,7 @@ int initialize_mutexes(t_shared *shared)
 	return (SUCCESS);
 }
 
-int	initialize_threads(t_shared *shared, t_info *info, pthread_t *threads)
+int	initialize_threads(t_shared *shared, t_philo *philo, pthread_t *threads)
 {
 	int	i;
 	int	err;
@@ -283,9 +283,9 @@ int	initialize_threads(t_shared *shared, t_info *info, pthread_t *threads)
 	i = 0;
 	while (i < shared->number_of_philosophers)
 	{
-		info[i].shared = shared;
-		info[i].philo_i = i;
-		err = pthread_create(threads + i, NULL, start_routine, &info[i]);
+		philo[i].shared = shared;
+		philo[i].philo_i = i;
+		err = pthread_create(threads + i, NULL, start_routine, &philo[i]);
 		if (err)
 			return (err);
 		i++;
@@ -298,7 +298,7 @@ int	main(int argc, char **argv)
 	t_shared	shared;
 	pthread_t	*threads;
 	int	i;
-	t_info		*info;
+	t_philo		*philo;
 	enum error	err;
 
 	printf("voor arg check\n");
@@ -309,12 +309,12 @@ int	main(int argc, char **argv)
 	if (err)
 		return (err);
 	threads = malloc(sizeof(pthread_t) * shared.number_of_philosophers);
-	info = malloc(sizeof(*info) * shared.number_of_philosophers);
+	philo = malloc(sizeof(*philo) * shared.number_of_philosophers);
 	err = initialize_mutexes(&shared);
 	if (err)
 		return (err);
 	shared.allowed_to_print = 1;
-	err = initialize_threads(&shared, info, threads);
+	err = initialize_threads(&shared, philo, threads);
 	if (err)
 		return (err);
 	while (!shared.one_dead)
@@ -328,7 +328,7 @@ int	main(int argc, char **argv)
 		i++;
 	}
 	free(shared.forks);
-	free(info);
+	free(philo);
 	free(threads);
 }
 
