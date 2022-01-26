@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   philo.c                                            :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dnoom <marvin@codam.nl>                      +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
+/*   Updated: 2022/01/26 13:30:12 by dnoom         ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include <pthread.h>
 #include "philo.h"
 #include <stdio.h>
@@ -6,23 +18,23 @@
 #include <unistd.h>
 
 #ifndef DEBUG
-#define DEBUG 0
+# define DEBUG 0
 #endif
 
 typedef struct s_shared {
-	int	number_of_philosophers;
-	int	time_to_die;
-	int	time_to_eat;
-	int	time_to_sleep;
-	int	number_of_times_each_philosopher_must_eat;
-	int	allowed_to_print;
+	int				number_of_philosophers;
+	int				time_to_die;
+	int				time_to_eat;
+	int				time_to_sleep;
+	int				number_of_times_each_philosopher_must_eat;
+	int				allowed_to_print;
 	volatile int	one_dead;
 	pthread_mutex_t	*forks;
-	pthread_mutex_t butler;
-	pthread_mutex_t print_butler;
-} t_shared;
+	pthread_mutex_t	butler;
+	pthread_mutex_t	print_butler;
+}	t_shared;
 
-enum activity {
+enum e_activity {
 	EATING,
 	SLEEPING,
 	THINKING
@@ -31,13 +43,13 @@ enum activity {
 typedef struct s_philo {
 	t_shared		*shared;
 	int				philo_i;
-	enum activity	activity;
+	enum e_activity	activity;
 	long			activity_started;
 	long			last_ate;
 	int				forks_in_hand;
-} t_philo;
+}	t_philo;
 
-enum error {
+enum e_error {
 	SUCCESS,
 	ERROR
 };
@@ -47,7 +59,7 @@ long	timeval_to_ms(struct timeval timeval)
 	return ((long)timeval.tv_sec * 1000 + timeval.tv_usec / 1000);
 }
 
-long	get_time()
+long	get_time(void)
 {
 	struct timeval	timeval;
 
@@ -55,7 +67,7 @@ long	get_time()
 	return (timeval_to_ms(timeval));
 }
 
-int ft_mutex_unlock(pthread_mutex_t *mutex)
+int	ft_mutex_unlock(pthread_mutex_t *mutex)
 {
 	if (pthread_mutex_unlock(mutex))
 	{
@@ -65,7 +77,7 @@ int ft_mutex_unlock(pthread_mutex_t *mutex)
 	return (SUCCESS);
 }
 
-int ft_mutex_init(pthread_mutex_t *mutex)
+int	ft_mutex_init(pthread_mutex_t *mutex)
 {
 	if (pthread_mutex_init(mutex, NULL))
 	{
@@ -75,7 +87,7 @@ int ft_mutex_init(pthread_mutex_t *mutex)
 	return (SUCCESS);
 }
 
-int ft_mutex_lock(pthread_mutex_t *mutex)
+int	ft_mutex_lock(pthread_mutex_t *mutex)
 {
 	if (pthread_mutex_lock(mutex))
 	{
@@ -87,7 +99,7 @@ int ft_mutex_lock(pthread_mutex_t *mutex)
 
 int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 {
-	long now;
+	long	now;
 
 	if (pthread_mutex_lock(&shared->butler))
 		return (ERROR);
@@ -100,7 +112,8 @@ int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 		printf("%ld %d has taken a fork\n", now, philo->philo_i + 1);
 	if (ft_mutex_unlock(&shared->print_butler))
 		return (ERROR);
-	if (ft_mutex_lock(&shared->forks[(philo->philo_i + 1) % shared->number_of_philosophers]))
+	if (ft_mutex_lock(&shared->forks[(philo->philo_i + 1) %
+			shared->number_of_philosophers]))
 		return (ERROR);
 	now = get_time();
 	if (ft_mutex_lock(&shared->print_butler))
@@ -115,7 +128,7 @@ int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 	return (SUCCESS);
 }
 
-int	start_activity(enum activity new_activity, enum activity *activity,
+int	start_activity(enum e_activity new_activity, enum e_activity *activity,
 		long *activity_started, t_philo *philo)
 {
 	static char	*words[] = {"eating", "sleeping", "thinking"};
@@ -159,7 +172,7 @@ int die(t_shared *shared, t_philo *philo, long now)
 	return (SUCCESS);
 }
 
-int check_death(t_shared *shared, t_philo *philo, long last_ate, enum activity activity)
+int check_death(t_shared *shared, t_philo *philo, long last_ate, enum e_activity activity)
 {
 	long	now;
 
@@ -173,7 +186,7 @@ int check_death(t_shared *shared, t_philo *philo, long last_ate, enum activity a
 	return (SUCCESS);
 }
 
-int check_thinking(t_shared *shared, t_philo *philo, long *activity_started, enum activity *activity, long *last_ate)
+int check_thinking(t_shared *shared, t_philo *philo, long *activity_started, enum e_activity *activity, long *last_ate)
 {
 	if (*activity == THINKING)
 	{
@@ -234,7 +247,7 @@ void	*start_routine(void *philo_void)
 	return (NULL);
 }
 
-enum error initialize_shared(t_shared *shared, int argc, char **argv)
+enum e_error initialize_shared(t_shared *shared, int argc, char **argv)
 {
 	shared->number_of_philosophers = ft_atoi(argv[1]);
 	shared->time_to_die = ft_atoi(argv[2]);
@@ -297,26 +310,22 @@ int	main(int argc, char **argv)
 {
 	t_shared	shared;
 	pthread_t	*threads;
-	int	i;
+	int			i;
 	t_philo		*philo;
-	enum error	err;
 
 	printf("voor arg check\n");
 	if (argc < 5 || argc > 6)
 		return (1);
 	printf("na arg check\n");
-	err = initialize_shared(&shared, argc, argv);
-	if (err)
-		return (err);
+	if (initialize_shared(&shared, argc, argv))
+		return (ERROR);
 	threads = malloc(sizeof(pthread_t) * shared.number_of_philosophers);
 	philo = malloc(sizeof(*philo) * shared.number_of_philosophers);
-	err = initialize_mutexes(&shared);
-	if (err)
-		return (err);
+	if (initialize_mutexes(&shared))
+		return (ERROR);
 	shared.allowed_to_print = 1;
-	err = initialize_threads(&shared, philo, threads);
-	if (err)
-		return (err);
+	if (initialize_threads(&shared, philo, threads))
+		return (ERROR);
 	while (!shared.one_dead)
 		;
 	i = 0;
@@ -331,4 +340,3 @@ int	main(int argc, char **argv)
 	free(philo);
 	free(threads);
 }
-
