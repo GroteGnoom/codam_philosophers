@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 13:50:24 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/26 13:53:17 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -176,7 +176,7 @@ int	check_death(t_shared *shared, t_philo *philo, long last_ate)
 	long	now;
 
 	now = get_time();
-	if (philo->activity != EATING && now > last_ate + shared->time_to_die)
+	if (now > last_ate + shared->time_to_die)
 	{
 		/*printf("now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n",
 		 * now, last_ate, shared->time_to_die,
