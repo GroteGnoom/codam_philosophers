@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 15:01:59 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/26 15:49:21 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,32 +112,36 @@ int	checked_print(t_shared *shared, t_philo *philo, char *s)
 	return (SUCCESS);
 }
 
+int	fork1(t_philo *philo)
+{
+	return (philo->philo_i);
+}
+
+int	fork2(t_philo *philo)
+{
+	return ((philo->philo_i + 1) % philo->shared->number_of_philosophers);
+}
+
 int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 {
-	int fork1;
-	int fork2;
-
-	fork1 = philo->philo_i;
-	fork2 = (philo->philo_i + 1) % shared->number_of_philosophers;
 	if (ft_mutex_lock(&shared->butler))
 		return (ERROR);
-	if (!shared->forks_2[fork1] || !shared->forks_2[fork2])
+	if (!shared->forks_2[fork1(philo)] || !shared->forks_2[fork2(philo)])
 	{
 		if (ft_mutex_unlock(&shared->butler))
 			return (ERROR);
 		return (SUCCESS);
 	}
-	if (ft_mutex_lock(&shared->forks[philo->philo_i]))
+	if (ft_mutex_lock(&shared->forks[fork1(philo)]))
 		return (ERROR);
-	shared->forks_2[fork1] = 0;
+	shared->forks_2[fork1(philo)] = 0;
 	if (checked_print(shared, philo, "has taken a fork"))
 		return (ERROR);
-	if (ft_mutex_lock(&shared->forks[(philo->philo_i + 1)
-				% shared->number_of_philosophers]))
+	if (ft_mutex_lock(&shared->forks[fork2(philo)]))
 		return (ERROR);
 	if (checked_print(shared, philo, "has taken a fork"))
 		return (ERROR);
-	shared->forks_2[fork2] = 0;
+	shared->forks_2[fork2(philo)] = 0;
 	if (ft_mutex_unlock(&shared->butler))
 		return (ERROR);
 	*forks_in_hand = 2;
@@ -161,18 +165,13 @@ int	start_activity(enum e_activity new_activity, t_philo *philo)
 
 int	drop_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 {
-	int fork1;
-	int fork2;
-
-	fork1 = philo->philo_i;
-	fork2 = (philo->philo_i + 1) % shared->number_of_philosophers;
 	if (ft_mutex_unlock(&shared->forks[philo->philo_i]))
 		return (ERROR);
 	if (ft_mutex_unlock(&shared->forks[(philo->philo_i + 1)
 				% shared->number_of_philosophers]))
 		return (ERROR);
-	shared->forks_2[fork1] = 1;
-	shared->forks_2[fork2] = 1;
+	shared->forks_2[fork1(philo)] = 1;
+	shared->forks_2[fork2(philo)] = 1;
 	*forks_in_hand = 0;
 	return (SUCCESS);
 }
@@ -197,13 +196,11 @@ int	check_death(t_shared *shared, t_philo *philo, long last_ate)
 	long	now;
 
 	now = get_time();
-	/*
-	printf("id: %d, now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n", philo->philo_i + 1, now,
-			last_ate, shared->time_to_die,
-			now - (last_ate + shared->time_to_die));
-			*/
 	if (now > last_ate + shared->time_to_die)
 	{
+		printf("id: %d, now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n", philo->philo_i + 1, now,
+				last_ate, shared->time_to_die,
+				now - (last_ate + shared->time_to_die));
 		die(shared, philo, now);
 		return (ERROR);
 	}
@@ -231,24 +228,60 @@ int	check_thinking(t_shared *shared, t_philo *philo)
 	return (SUCCESS);
 }
 
-void	*start_routine(void *philo_void)
+int	check_sleeping(t_shared *shared, t_philo *philo)
+{
+	long	now;
+
+	if (philo->activity == SLEEPING)
+	{
+		now = get_time();
+		if (now - philo->activity_started > shared->time_to_sleep)
+			if (start_activity(THINKING, philo))
+				return (ERROR);
+	}
+	return (SUCCESS);
+}
+
+int	check_eating(t_shared *shared, t_philo *philo)
+{
+	long	now;
+
+	if (philo->activity == EATING)
+	{
+		now = get_time();
+		if (now - philo->activity_started > shared->time_to_eat)
+		{
+			if (drop_forks(shared, philo, &philo->forks_in_hand))
+				return (ERROR);
+			if (start_activity(SLEEPING, philo))
+				return (ERROR);
+		}
+	}
+	return (SUCCESS);
+}
+
+void init_philo(void *philo_void, t_shared **shared_p, t_philo **philo_p)
 {
 	t_shared		*shared;
 	t_philo			*philo;
-	long			now;
 
 	philo = philo_void;
 	shared = philo->shared;
 	philo->forks_in_hand = 0;
-	now = get_time();
-	philo->last_ate = now;
+	philo->last_ate = get_time();
 	start_activity(THINKING, philo);
-	printf("%ld %d is thinking\n", now, philo->philo_i + 1);
-	/*printf("hi! I'm %d, %d, %d\n", philo->philo_i + 1, 
-	 * shared->number_of_philosophers, shared->time_to_die);*/
+	*shared_p = shared;
+	*philo_p = philo;
+}
+
+void	*start_routine(void *philo_void)
+{
+	t_shared		*shared;
+	t_philo			*philo;
+
+	init_philo(philo_void, &shared, &philo);
 	while (!shared->one_dead)
 	{
-		now = get_time();
 		if (check_death(shared, philo, philo->last_ate))
 			break ;
 		usleep(1000);
@@ -256,20 +289,10 @@ void	*start_routine(void *philo_void)
 			break ;
 		if (check_thinking(shared, philo))
 			break ;
-		else if (philo->activity == SLEEPING)
-		{
-			if (now - philo->activity_started > shared->time_to_sleep)
-				start_activity(THINKING, philo);
-		}
-		else if (philo->activity == EATING)
-		{
-			if (now - philo->activity_started > shared->time_to_eat)
-			{
-				if (drop_forks(shared, philo, &philo->forks_in_hand))
-					return (NULL);
-				start_activity(SLEEPING, philo);
-			}
-		}
+		if (check_sleeping(shared, philo))
+			break ;
+		if (check_eating(shared, philo))
+			break ;
 	}
 	ft_mutex_unlock(&shared->butler);
 	if (philo->forks_in_hand == 2)
