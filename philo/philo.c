@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 14:35:11 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/26 15:01:59 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,6 +30,7 @@ typedef struct s_shared {
 	int				allowed_to_print;
 	volatile int	one_dead;
 	pthread_mutex_t	*forks;
+	int				*forks_2;
 	pthread_mutex_t	butler;
 	pthread_mutex_t	print_butler;
 }	t_shared;
@@ -101,9 +102,9 @@ int	checked_print(t_shared *shared, t_philo *philo, char *s)
 {
 	long	now;
 
-	now = get_time();
 	if (ft_mutex_lock(&shared->print_butler))
 		return (ERROR);
+	now = get_time();
 	if (philo->shared->allowed_to_print)
 		printf("%ld %d %s\n", now, philo->philo_i + 1, s);
 	if (ft_mutex_unlock(&shared->print_butler))
@@ -113,10 +114,22 @@ int	checked_print(t_shared *shared, t_philo *philo, char *s)
 
 int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 {
+	int fork1;
+	int fork2;
+
+	fork1 = philo->philo_i;
+	fork2 = (philo->philo_i + 1) % shared->number_of_philosophers;
 	if (ft_mutex_lock(&shared->butler))
 		return (ERROR);
+	if (!shared->forks_2[fork1] || !shared->forks_2[fork2])
+	{
+		if (ft_mutex_unlock(&shared->butler))
+			return (ERROR);
+		return (SUCCESS);
+	}
 	if (ft_mutex_lock(&shared->forks[philo->philo_i]))
 		return (ERROR);
+	shared->forks_2[fork1] = 0;
 	if (checked_print(shared, philo, "has taken a fork"))
 		return (ERROR);
 	if (ft_mutex_lock(&shared->forks[(philo->philo_i + 1)
@@ -124,6 +137,7 @@ int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 		return (ERROR);
 	if (checked_print(shared, philo, "has taken a fork"))
 		return (ERROR);
+	shared->forks_2[fork2] = 0;
 	if (ft_mutex_unlock(&shared->butler))
 		return (ERROR);
 	*forks_in_hand = 2;
@@ -147,11 +161,18 @@ int	start_activity(enum e_activity new_activity, t_philo *philo)
 
 int	drop_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 {
+	int fork1;
+	int fork2;
+
+	fork1 = philo->philo_i;
+	fork2 = (philo->philo_i + 1) % shared->number_of_philosophers;
 	if (ft_mutex_unlock(&shared->forks[philo->philo_i]))
 		return (ERROR);
 	if (ft_mutex_unlock(&shared->forks[(philo->philo_i + 1)
 				% shared->number_of_philosophers]))
 		return (ERROR);
+	shared->forks_2[fork1] = 1;
+	shared->forks_2[fork2] = 1;
 	*forks_in_hand = 0;
 	return (SUCCESS);
 }
@@ -180,7 +201,7 @@ int	check_death(t_shared *shared, t_philo *philo, long last_ate)
 	printf("id: %d, now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n", philo->philo_i + 1, now,
 			last_ate, shared->time_to_die,
 			now - (last_ate + shared->time_to_die));
-	*/
+			*/
 	if (now > last_ate + shared->time_to_die)
 	{
 		die(shared, philo, now);
@@ -194,13 +215,18 @@ int	check_thinking(t_shared *shared, t_philo *philo)
 	if (philo->activity == THINKING)
 	{
 		if (philo->forks_in_hand != 2)
+		{
 			if (take_forks(shared, philo, &philo->forks_in_hand))
 				return (ERROR);
-		if (check_death(shared, philo, philo->last_ate))
-			return (ERROR);
-		if (start_activity(EATING, philo))
-			return (ERROR);
-		philo->last_ate = philo->activity_started;
+		}
+		else
+		{
+			if (check_death(shared, philo, philo->last_ate))
+				return (ERROR);
+			if (start_activity(EATING, philo))
+				return (ERROR);
+			philo->last_ate = philo->activity_started;
+		}
 	}
 	return (SUCCESS);
 }
@@ -254,6 +280,8 @@ void	*start_routine(void *philo_void)
 
 enum e_error	initialize_shared(t_shared *shared, int argc, char **argv)
 {
+	int i;
+
 	shared->number_of_philosophers = ft_atoi(argv[1]);
 	shared->time_to_die = ft_atoi(argv[2]);
 	shared->time_to_eat = ft_atoi(argv[3]);
@@ -269,6 +297,11 @@ enum e_error	initialize_shared(t_shared *shared, int argc, char **argv)
 	shared->one_dead = 0;
 	shared->forks = malloc(sizeof(*shared->forks)
 			* shared->number_of_philosophers);
+	shared->forks_2 = malloc(sizeof(*shared->forks_2)
+			* shared->number_of_philosophers);
+	i = 0;
+	while (i < shared->number_of_philosophers)
+		shared->forks_2[i++] = 1;
 	return (SUCCESS);
 }
 
@@ -333,7 +366,6 @@ int	main(int argc, char **argv)
 	while (!shared.one_dead)
 		;
 	i = 0;
-	printf("finished!\n");
 	usleep(shared.time_to_die * shared.number_of_philosophers * 2);
 	while (i < shared.number_of_philosophers)
 	{
@@ -341,6 +373,7 @@ int	main(int argc, char **argv)
 		i++;
 	}
 	free(shared.forks);
+	free(shared.forks_2);
 	free(philo);
 	free(threads);
 }
