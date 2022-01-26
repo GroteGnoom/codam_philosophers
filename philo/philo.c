@@ -133,6 +133,18 @@ int drop_forks(t_shared *shared, t_info *info, int *forks_in_hand)
 	return (SUCCESS);
 }
 
+int die(t_shared *shared, t_info *info, long now)
+{
+	shared->one_dead = 1;
+	if (ft_mutex_lock(&shared->print_butler))
+		return (ERROR);
+	shared->allowed_to_print = 0;
+	printf("%ld %d died\n", now, info->philo_i + 1);
+	if (ft_mutex_unlock(&shared->print_butler))
+		return (ERROR);
+	return (SUCCESS);
+}
+
 void	*start_routine(void *info_void)
 {
 	t_shared		*shared;
@@ -157,12 +169,16 @@ void	*start_routine(void *info_void)
 		now = get_time();
 		if (activity != EATING && now > last_ate + shared->time_to_die)
 		{
-			printf("now: %ld last_ate: %ld, ttd: %d\n", now, last_ate, shared->time_to_die);
-			shared->one_dead = 1;
-			pthread_mutex_lock(&shared->print_butler);
-			shared->allowed_to_print = 0;
-			printf("%ld %d died\n", now, info->philo_i + 1);
-			pthread_mutex_unlock(&shared->print_butler);
+			printf("now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n", now, last_ate, shared->time_to_die, now - (last_ate + shared->time_to_die));
+			die(shared, info, now);
+			break;
+		}
+		usleep(1000);
+		now = get_time();
+		if (activity != EATING && now > last_ate + shared->time_to_die)
+		{
+			printf("now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n", now, last_ate, shared->time_to_die, now - (last_ate + shared->time_to_die));
+			die(shared, info, now);
 			break;
 		}
 		if (activity == THINKING)
