@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:47:01 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 16:55:39 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/26 16:59:14 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,16 @@ void	init_philo(void *philo_void, t_shared **shared_p, t_philo **philo_p)
 	*philo_p = philo;
 }
 
+static void	alloc_shared(t_shared *shared)
+{
+	shared->forks = malloc(sizeof(*shared->forks)
+			* shared->number_of_philosophers);
+	shared->forks_2 = malloc(sizeof(*shared->forks_2)
+			* shared->number_of_philosophers);
+	shared->eaten = malloc(sizeof(*shared->eaten)
+			* shared->number_of_philosophers);
+}
+
 int	initialize_shared(t_shared *shared, int argc, char **argv)
 {
 	int	i;
@@ -44,12 +54,7 @@ int	initialize_shared(t_shared *shared, int argc, char **argv)
 	else
 		shared->number_of_times_each_philosopher_must_eat = -1;
 	shared->one_dead = 0;
-	shared->forks = malloc(sizeof(*shared->forks)
-			* shared->number_of_philosophers);
-	shared->forks_2 = malloc(sizeof(*shared->forks_2)
-			* shared->number_of_philosophers);
-	shared->eaten = malloc(sizeof(*shared->eaten)
-			* shared->number_of_philosophers);
+	alloc_shared(shared);
 	i = 0;
 	while (i < shared->number_of_philosophers)
 	{
