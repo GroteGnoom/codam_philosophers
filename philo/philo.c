@@ -99,6 +99,28 @@ enum activity {
 	THINKING
 };
 
+void start_activity(enum activity new_activity, enum activity *activity,
+		long *activity_started, t_info *info)
+{
+	static char	*words[] = {"eating", "sleeping", "thinking"};
+	long		now;
+
+	now=get_time();
+	*activity = new_activity;
+	printf("%ld %d is %s\n", now, info->philo_i + 1, words[*activity]);
+	*activity_started = now;
+}
+
+int drop_forks(t_shared *shared, t_info *info, int *forks_in_hand)
+{
+	if (ft_mutex_unlock(&shared->forks[info->philo_i]))
+		return (ERROR);
+	if (ft_mutex_unlock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]))
+		return (ERROR);
+	*forks_in_hand = 0;
+	return (SUCCESS);
+}
+
 void	*start_routine(void *info_void)
 {
 	t_shared		*shared;
@@ -132,43 +154,33 @@ void	*start_routine(void *info_void)
 		if (activity == THINKING)
 		{
 			if (forks_in_hand == 2)
-			{
-				printf("%ld %d is eating\n", now, info->philo_i + 1);
-				activity = EATING;
-				activity_started = now;
-			}
+				start_activity(EATING, &activity, &activity_started, info);
 			else if (take_forks(shared, info, &forks_in_hand))
 				return (NULL);
 		}
 		else if (activity == SLEEPING)
 		{
 			if (now - activity_started > shared->time_to_sleep)
-			{
-				activity = THINKING; 
-				activity_started = now;
-				printf("%ld %d is thinking\n", now, info->philo_i + 1);
-			}
+				start_activity(THINKING, &activity, &activity_started, info);
 		} 
 		else if (activity == EATING)
 		{
 			last_ate = now;
 			if (now - activity_started > shared->time_to_eat)
 			{
+				if (drop_forks(shared, info, &forks_in_hand))
+					return (NULL);
 				ft_mutex_unlock(&shared->forks[info->philo_i]);
 				ft_mutex_unlock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]);
 				forks_in_hand = 0;
-				activity = SLEEPING;
-				activity_started = now;
-				printf("%ld %d is sleeping\n", now, info->philo_i + 1);
+				start_activity(SLEEPING, &activity, &activity_started, info);
 			}
 		}
 	}
 	ft_mutex_unlock(&shared->butler);
 	if (forks_in_hand == 2)
-	{
-		ft_mutex_unlock(&shared->forks[info->philo_i]);
-		ft_mutex_unlock(&shared->forks[(info->philo_i + 1) % shared->number_of_philosophers]);
-	}
+		if (drop_forks(shared, info, &forks_in_hand))
+			return (NULL);
 	return (NULL);
 }
 
