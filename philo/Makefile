@@ -1,5 +1,5 @@
 NAME = philo
-SRC = philo.c ft_atoi.c
+SRC = philo.c ft_atoi.c death.c init.c time.c forks.c activities.c mutex.c
 ifdef DEBUG
 	CC=clang
 	FLAGS = -Wall -Wextra -fsanitize=address -DDEBUG=1 -g
