@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 15:49:21 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/26 15:55:02 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -368,6 +368,13 @@ int	initialize_threads(t_shared *shared, t_philo *philo, pthread_t *threads)
 	return (SUCCESS);
 }
 
+void	free_everything(t_shared shared, t_philo *philo, pthread_t *threads)
+{
+	free(shared.forks);
+	free(shared.forks_2);
+	free(philo);
+	free(threads);
+}
 int	main(int argc, char **argv)
 {
 	t_shared	shared;
@@ -391,12 +398,6 @@ int	main(int argc, char **argv)
 	i = 0;
 	usleep(shared.time_to_die * shared.number_of_philosophers * 2);
 	while (i < shared.number_of_philosophers)
-	{
-		pthread_join(threads[i], NULL);
-		i++;
-	}
-	free(shared.forks);
-	free(shared.forks_2);
-	free(philo);
-	free(threads);
+		pthread_join(threads[i++], NULL);
+	free_everything(shared, philo, threads);
 }
