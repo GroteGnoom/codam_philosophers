@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:27:42 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 16:55:18 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 11:33:09 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,6 +79,8 @@ int		initialize_shared(t_shared *shared, int argc, char **argv);
 int		initialize_mutexes(t_shared *shared);
 int		initialize_threads(t_shared *shared,
 			t_philo *philo, pthread_t *threads);
+
+void	print_death_info(t_philo *philo);
 
 void	*start_routine(void *philo_void);
 #endif

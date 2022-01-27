@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:44:06 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 16:49:48 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 11:33:22 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,11 +35,6 @@ int	check_death(t_shared *shared, t_philo *philo, long last_ate)
 	now = get_time();
 	if (now > last_ate + shared->time_to_die)
 	{
-		/*
-		printf("id: %d, now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n", philo->philo_i + 1, now,
-				last_ate, shared->time_to_die,
-				now - (last_ate + shared->time_to_die));
-				*/
 		die(shared, philo, now);
 		return (ERROR);
 	}
@@ -54,7 +49,7 @@ int	check_everybody_eaten(t_shared *shared)
 	while (i < shared->number_of_philosophers)
 	{
 		if (shared->eaten[i]
-				< shared->number_of_times_each_philosopher_must_eat)
+			< shared->number_of_times_each_philosopher_must_eat)
 			return (SUCCESS);
 		i++;
 	}
