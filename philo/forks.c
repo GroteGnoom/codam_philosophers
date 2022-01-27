@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:42:05 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 11:38:38 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 12:01:30 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@ static int	fork1(t_philo *philo)
 
 static int	fork2(t_philo *philo)
 {
+	if (philo->shared->number_of_philosophers == 1)
+		return (1);
 	return ((philo->philo_i + 1) % philo->shared->number_of_philosophers);
 }
 
@@ -50,10 +52,9 @@ int	take_forks(t_shared *shared, t_philo *philo)
 
 int	drop_forks(t_shared *shared, t_philo *philo)
 {
-	if (ft_mutex_unlock(&shared->forks[philo->philo_i]))
+	if (ft_mutex_unlock(&shared->forks[fork1(philo)]))
 		return (ERROR);
-	if (ft_mutex_unlock(&shared->forks[(philo->philo_i + 1)
-				% shared->number_of_philosophers]))
+	if (ft_mutex_unlock(&shared->forks[fork2(philo)]))
 		return (ERROR);
 	shared->forks_2[fork1(philo)] = 1;
 	shared->forks_2[fork2(philo)] = 1;

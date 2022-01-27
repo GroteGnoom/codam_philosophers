@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:47:01 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 17:01:01 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 11:59:56 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,9 +30,9 @@ void	init_philo(void *philo_void, t_shared **shared_p, t_philo **philo_p)
 static void	alloc_shared(t_shared *shared)
 {
 	shared->forks = malloc(sizeof(*shared->forks)
-			* shared->number_of_philosophers);
+			* shared->number_of_forks);
 	shared->forks_2 = malloc(sizeof(*shared->forks_2)
-			* shared->number_of_philosophers);
+			* shared->number_of_forks);
 	shared->eaten = malloc(sizeof(*shared->eaten)
 			* shared->number_of_philosophers);
 	if (!shared->forks || !shared->forks_2 || !shared->eaten)
@@ -44,6 +44,9 @@ int	initialize_shared(t_shared *shared, int argc, char **argv)
 	int	i;
 
 	shared->number_of_philosophers = ft_atoi(argv[1]);
+	shared->number_of_forks = shared->number_of_philosophers;
+	if (shared->number_of_philosophers == 1)
+		shared->number_of_forks = 2;
 	shared->time_to_die = ft_atoi(argv[2]);
 	shared->time_to_eat = ft_atoi(argv[3]);
 	shared->time_to_sleep = ft_atoi(argv[4]);
@@ -59,10 +62,10 @@ int	initialize_shared(t_shared *shared, int argc, char **argv)
 	alloc_shared(shared);
 	i = 0;
 	while (i < shared->number_of_philosophers)
-	{
-		shared->forks_2[i] = 1;
 		shared->eaten[i++] = 0;
-	}
+	i = 0;
+	while (i < shared->number_of_forks)
+		shared->forks_2[i++] = 1;
 	return (SUCCESS);
 }
 
@@ -72,7 +75,7 @@ int	initialize_mutexes(t_shared *shared)
 	int	err;
 
 	i = 0;
-	while (i < shared->number_of_philosophers)
+	while (i < shared->number_of_forks)
 	{
 		err = ft_mutex_init(shared->forks + i);
 		if (err)

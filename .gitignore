@@ -7,3 +7,4 @@ my_*
 philo/philo
 philo/build_and_run
 *.dSYM
+tags

@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:27:42 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 11:37:23 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 11:56:52 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,6 +18,7 @@
 
 typedef struct s_shared {
 	int				number_of_philosophers;
+	int				number_of_forks;
 	int				time_to_die;
 	int				time_to_eat;
 	int				time_to_sleep;
