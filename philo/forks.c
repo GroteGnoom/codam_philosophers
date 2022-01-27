@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:42:05 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 16:49:59 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 11:38:38 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ static int	fork2(t_philo *philo)
 	return ((philo->philo_i + 1) % philo->shared->number_of_philosophers);
 }
 
-int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
+int	take_forks(t_shared *shared, t_philo *philo)
 {
 	if (ft_mutex_lock(&shared->butler))
 		return (ERROR);
@@ -44,11 +44,11 @@ int	take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 	shared->forks_2[fork2(philo)] = 0;
 	if (ft_mutex_unlock(&shared->butler))
 		return (ERROR);
-	*forks_in_hand = 2;
+	philo->forks_in_hand = 2;
 	return (SUCCESS);
 }
 
-int	drop_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
+int	drop_forks(t_shared *shared, t_philo *philo)
 {
 	if (ft_mutex_unlock(&shared->forks[philo->philo_i]))
 		return (ERROR);
@@ -57,6 +57,6 @@ int	drop_forks(t_shared *shared, t_philo *philo, int *forks_in_hand)
 		return (ERROR);
 	shared->forks_2[fork1(philo)] = 1;
 	shared->forks_2[fork2(philo)] = 1;
-	*forks_in_hand = 0;
+	philo->forks_in_hand = 0;
 	return (SUCCESS);
 }

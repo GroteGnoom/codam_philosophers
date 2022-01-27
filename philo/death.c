@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:44:06 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 11:33:22 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 11:37:25 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,12 +28,12 @@ int	die(t_shared *shared, t_philo *philo, long now)
 	return (SUCCESS);
 }
 
-int	check_death(t_shared *shared, t_philo *philo, long last_ate)
+int	check_death(t_shared *shared, t_philo *philo)
 {
 	long	now;
 
 	now = get_time();
-	if (now > last_ate + shared->time_to_die)
+	if (now > philo->last_ate + shared->time_to_die)
 	{
 		die(shared, philo, now);
 		return (ERROR);

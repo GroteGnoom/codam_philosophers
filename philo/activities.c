@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:45:40 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/26 16:49:17 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 11:37:59 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,12 +33,12 @@ int	check_thinking(t_shared *shared, t_philo *philo)
 	{
 		if (philo->forks_in_hand != 2)
 		{
-			if (take_forks(shared, philo, &philo->forks_in_hand))
+			if (take_forks(shared, philo))
 				return (ERROR);
 		}
 		else
 		{
-			if (check_death(shared, philo, philo->last_ate))
+			if (check_death(shared, philo))
 				return (ERROR);
 			if (start_activity(EATING, philo))
 				return (ERROR);
@@ -72,7 +72,7 @@ int	check_eating(t_shared *shared, t_philo *philo)
 		now = get_time();
 		if (now - philo->activity_started > shared->time_to_eat)
 		{
-			if (drop_forks(shared, philo, &philo->forks_in_hand))
+			if (drop_forks(shared, philo))
 				return (ERROR);
 			if (start_activity(SLEEPING, philo))
 				return (ERROR);

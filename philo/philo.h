@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:27:42 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 11:33:09 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 11:37:23 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,13 +60,13 @@ int		ft_mutex_unlock(pthread_mutex_t *mutex);
 int		ft_mutex_init(pthread_mutex_t *mutex);
 int		ft_mutex_lock(pthread_mutex_t *mutex);
 
-int		take_forks(t_shared *shared, t_philo *philo, int *forks_in_hand);
-int		drop_forks(t_shared *shared, t_philo *philo, int *forks_in_hand);
+int		take_forks(t_shared *shared, t_philo *philo);
+int		drop_forks(t_shared *shared, t_philo *philo);
 
 int		checked_print(t_shared *shared, t_philo *philo, char *s);
 
 int		check_everybody_eaten(t_shared *shared);
-int		check_death(t_shared *shared, t_philo *philo, long last_ate);
+int		check_death(t_shared *shared, t_philo *philo);
 int		die(t_shared *shared, t_philo *philo, long now);
 
 int		start_activity(enum e_activity new_activity, t_philo *philo);
