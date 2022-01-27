@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:47:01 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 11:59:56 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 12:12:52 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,21 +43,11 @@ int	initialize_shared(t_shared *shared, int argc, char **argv)
 {
 	int	i;
 
-	shared->number_of_philosophers = ft_atoi(argv[1]);
+	if (parse_args(shared, argc, argv))
+		return (ERROR);
 	shared->number_of_forks = shared->number_of_philosophers;
 	if (shared->number_of_philosophers == 1)
 		shared->number_of_forks = 2;
-	shared->time_to_die = ft_atoi(argv[2]);
-	shared->time_to_eat = ft_atoi(argv[3]);
-	shared->time_to_sleep = ft_atoi(argv[4]);
-	if (argc == 6)
-	{
-		shared->number_of_times_each_philosopher_must_eat = ft_atoi(argv[5]);
-		if (shared->number_of_times_each_philosopher_must_eat < 0)
-			return (ERROR);
-	}
-	else
-		shared->number_of_times_each_philosopher_must_eat = -1;
 	shared->one_dead = 0;
 	alloc_shared(shared);
 	i = 0;

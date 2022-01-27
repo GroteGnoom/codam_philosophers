@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 11:39:04 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 12:15:28 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,7 +76,7 @@ int	main(int argc, char **argv)
 	t_philo		*philo;
 
 	if (argc < 5 || argc > 6)
-		return (1);
+		return (print_error("There should be either 4 or 5 arguments\n"));
 	if (initialize_shared(&shared, argc, argv))
 		return (ERROR);
 	threads = malloc(sizeof(pthread_t) * shared.number_of_philosophers);
