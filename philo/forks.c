@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:42:05 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 13:01:35 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 13:29:20 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,9 +19,30 @@ static int	fork1(t_philo *philo)
 
 static int	fork2(t_philo *philo)
 {
-	if (philo->shared->number_of_philosophers == 1)
-		return (1);
-	return ((philo->philo_i + 1) % philo->shared->number_of_philosophers);
+	return ((philo->philo_i + 1) % philo->shared->number_of_forks);
+}
+
+int	really_take_forks(t_shared *shared, t_philo *philo)
+{
+	if (philo->forks_in_hand == 0)
+	{
+		if (ft_mutex_lock(&shared->forks[fork1(philo)]))
+			return (ERROR);
+		shared->forks_2[fork1(philo)] = 0;
+		if (checked_print(shared, philo, "has taken a fork"))
+			return (ERROR);
+		philo->forks_in_hand = 1;
+	}
+	if (shared->number_of_forks > 1)
+	{
+		if (ft_mutex_lock(&shared->forks[fork2(philo)]))
+			return (ERROR);
+		if (checked_print(shared, philo, "has taken a fork"))
+			return (ERROR);
+		shared->forks_2[fork2(philo)] = 0;
+		philo->forks_in_hand = 2;
+	}
+	return (SUCCESS);
 }
 
 int	take_forks(t_shared *shared, t_philo *philo)
@@ -36,19 +57,10 @@ int	take_forks(t_shared *shared, t_philo *philo)
 			return (ERROR);
 		return (SUCCESS);
 	}
-	if (ft_mutex_lock(&shared->forks[fork1(philo)]))
+	if (really_take_forks(shared, philo))
 		return (ERROR);
-	shared->forks_2[fork1(philo)] = 0;
-	if (checked_print(shared, philo, "has taken a fork"))
-		return (ERROR);
-	if (ft_mutex_lock(&shared->forks[fork2(philo)]))
-		return (ERROR);
-	if (checked_print(shared, philo, "has taken a fork"))
-		return (ERROR);
-	shared->forks_2[fork2(philo)] = 0;
 	if (ft_mutex_unlock(&shared->butler))
 		return (ERROR);
-	philo->forks_in_hand = 2;
 	return (SUCCESS);
 }
 

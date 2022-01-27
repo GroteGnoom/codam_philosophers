@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:45:40 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 11:37:59 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 13:31:53 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,12 +31,12 @@ int	check_thinking(t_shared *shared, t_philo *philo)
 {
 	if (philo->activity == THINKING)
 	{
-		if (philo->forks_in_hand != 2)
+		if (philo->forks_in_hand == 0)
 		{
 			if (take_forks(shared, philo))
 				return (ERROR);
 		}
-		else
+		else if (philo->forks_in_hand == 2)
 		{
 			if (check_death(shared, philo))
 				return (ERROR);

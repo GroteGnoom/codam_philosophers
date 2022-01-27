@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:47:01 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 12:12:52 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 13:15:07 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,7 @@ int	initialize_shared(t_shared *shared, int argc, char **argv)
 		return (ERROR);
 	shared->number_of_forks = shared->number_of_philosophers;
 	if (shared->number_of_philosophers == 1)
-		shared->number_of_forks = 2;
+		shared->number_of_forks = FORKS_FOR_ONE;
 	shared->one_dead = 0;
 	alloc_shared(shared);
 	i = 0;

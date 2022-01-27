@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:27:42 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 12:16:04 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 13:14:57 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,6 +15,8 @@
 
 # include <pthread.h>
 # include <sys/time.h>
+
+# define FORKS_FOR_ONE 1
 
 typedef struct s_shared {
 	int				number_of_philosophers;
