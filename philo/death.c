@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:44:06 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 11:37:25 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 12:28:57 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,6 +45,8 @@ int	check_everybody_eaten(t_shared *shared)
 {
 	int	i;
 
+	if (shared->number_of_times_each_philosopher_must_eat == -1)
+		return (SUCCESS);
 	i = 0;
 	while (i < shared->number_of_philosophers)
 	{
