@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:42:05 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 12:01:30 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 13:01:35 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,8 @@ static int	fork2(t_philo *philo)
 
 int	take_forks(t_shared *shared, t_philo *philo)
 {
+	if (!shared->forks_2[fork1(philo)] || !shared->forks_2[fork2(philo)])
+		return (ERROR);
 	if (ft_mutex_lock(&shared->butler))
 		return (ERROR);
 	if (!shared->forks_2[fork1(philo)] || !shared->forks_2[fork2(philo)])
