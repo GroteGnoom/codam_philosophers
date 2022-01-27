@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/27 12:05:03 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 12:15:40 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/27 12:17:56 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ int	parse_args(t_shared *shared, int argc, char **argv)
 	{
 		shared->number_of_times_each_philosopher_must_eat = ft_atoi(argv[5]);
 		if (shared->number_of_times_each_philosopher_must_eat < 0)
-			return (print_error("number of times a philosopher must eat"
+			return (print_error("number of times a philosopher must eat "
 					"must be positive if it is given\n"));
 	}
 	else
