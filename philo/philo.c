@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/28 12:02:11 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/28 12:45:08 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,9 +38,9 @@ void	*start_routine(void *philo_void)
 		if (check_eating(shared, philo))
 			break ;
 	}
+	shared->one_dead = 1;
 	ft_mutex_unlock(&shared->butler);
-	if (philo->forks_in_hand == 2)
-		drop_forks(shared, philo);
+	drop_forks(shared, philo);
 	return (NULL);
 }
 
