@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/28 10:50:32 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/28 11:37:15 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,12 +40,9 @@ void	*start_routine(void *philo_void)
 	{
 		if (check_everybody_eaten(shared))
 			break ;
-		if (check_death(shared, philo))
-			break ;
+		usleep(10);
 		if (philo->activity == EATING || philo->activity == SLEEPING)
 			usleep(1000);
-		else
-			usleep(10);
 		if (check_death(shared, philo))
 			break ;
 		if (check_thinking(shared, philo))
@@ -57,8 +54,7 @@ void	*start_routine(void *philo_void)
 	}
 	ft_mutex_unlock(&shared->butler);
 	if (philo->forks_in_hand == 2)
-		if (drop_forks(shared, philo))
-			return (NULL);
+		drop_forks(shared, philo);
 	return (NULL);
 }
 
