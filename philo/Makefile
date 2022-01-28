@@ -19,7 +19,7 @@ obj/%.o: %.c
 	$(CC) $(FLAGS) -c $^ -o $@
 
 make_dir:
-	mkdir -p obj
+	@mkdir -p obj
 
 clean:
 	rm -f $(OBJ)
