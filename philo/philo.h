@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:27:42 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/28 11:11:15 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/28 11:16:40 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,6 @@ enum e_error {
 	ERROR
 };
 
-int		ft_atoi(const char *str);
 int		ft_atoi2(const char *str, int *res);
 
 long	timeval_to_ms(struct timeval timeval);
