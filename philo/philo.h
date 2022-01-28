@@ -19,12 +19,12 @@
 # define FORKS_FOR_ONE 1
 
 typedef struct s_shared {
-	int				number_of_philosophers;
-	int				number_of_forks;
+	int				nr_of_philos;
+	int				nr_of_forks;
 	int				time_to_die;
 	int				time_to_eat;
 	int				time_to_sleep;
-	int				number_of_times_each_philosopher_must_eat;
+	int				nr_of_times_each_philo_must_eat;
 	int				allowed_to_print;
 	volatile int	one_dead;
 	pthread_mutex_t	*forks;

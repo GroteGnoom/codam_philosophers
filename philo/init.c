@@ -30,11 +30,11 @@ void	init_philo(void *philo_void, t_shared **shared_p, t_philo **philo_p)
 static void	alloc_shared(t_shared *shared)
 {
 	shared->forks = malloc(sizeof(*shared->forks)
-			* shared->number_of_forks);
+			* shared->nr_of_forks);
 	shared->forks_2 = malloc(sizeof(*shared->forks_2)
-			* shared->number_of_forks);
+			* shared->nr_of_forks);
 	shared->eaten = malloc(sizeof(*shared->eaten)
-			* shared->number_of_philosophers);
+			* shared->nr_of_philos);
 	if (!shared->forks || !shared->forks_2 || !shared->eaten)
 		exit(1);
 }
@@ -45,16 +45,16 @@ int	initialize_shared(t_shared *shared, int argc, char **argv)
 
 	if (parse_args(shared, argc, argv))
 		return (ERROR);
-	shared->number_of_forks = shared->number_of_philosophers;
-	if (shared->number_of_philosophers == 1)
-		shared->number_of_forks = FORKS_FOR_ONE;
+	shared->nr_of_forks = shared->nr_of_philos;
+	if (shared->nr_of_philos == 1)
+		shared->nr_of_forks = FORKS_FOR_ONE;
 	shared->one_dead = 0;
 	alloc_shared(shared);
 	i = 0;
-	while (i < shared->number_of_philosophers)
+	while (i < shared->nr_of_philos)
 		shared->eaten[i++] = 0;
 	i = 0;
-	while (i < shared->number_of_forks)
+	while (i < shared->nr_of_forks)
 		shared->forks_2[i++] = 1;
 	return (SUCCESS);
 }
@@ -65,7 +65,7 @@ int	initialize_mutexes(t_shared *shared)
 	int	err;
 
 	i = 0;
-	while (i < shared->number_of_forks)
+	while (i < shared->nr_of_forks)
 	{
 		err = ft_mutex_init(shared->forks + i);
 		if (err)
@@ -87,7 +87,7 @@ int	initialize_threads(t_shared *shared, t_philo *philo, pthread_t *threads)
 	int	err;
 
 	i = 0;
-	while (i < shared->number_of_philosophers)
+	while (i < shared->nr_of_philos)
 	{
 		philo[i].shared = shared;
 		philo[i].philo_i = i;

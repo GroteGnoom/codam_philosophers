@@ -82,8 +82,8 @@ int	main(int argc, char **argv)
 		return (print_error("There should be either 4 or 5 arguments\n"));
 	if (initialize_shared(&shared, argc, argv))
 		return (ERROR);
-	threads = malloc(sizeof(pthread_t) * shared.number_of_philosophers);
-	philo = malloc(sizeof(*philo) * shared.number_of_philosophers);
+	threads = malloc(sizeof(pthread_t) * shared.nr_of_philos);
+	philo = malloc(sizeof(*philo) * shared.nr_of_philos);
 	if (initialize_mutexes(&shared))
 		return (ERROR);
 	shared.allowed_to_print = 1;
@@ -92,8 +92,8 @@ int	main(int argc, char **argv)
 	while (!shared.one_dead)
 		;
 	i = 0;
-	usleep(shared.time_to_die * shared.number_of_philosophers * 2);
-	while (i < shared.number_of_philosophers)
+	usleep(shared.time_to_die * shared.nr_of_philos * 2);
+	while (i < shared.nr_of_philos)
 		pthread_join(threads[i++], NULL);
 	free_everything(shared, philo, threads);
 }

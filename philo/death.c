@@ -45,13 +45,13 @@ int	check_everybody_eaten(t_shared *shared)
 {
 	int	i;
 
-	if (shared->number_of_times_each_philosopher_must_eat == -1)
+	if (shared->nr_of_times_each_philo_must_eat == -1)
 		return (SUCCESS);
 	i = 0;
-	while (i < shared->number_of_philosophers)
+	while (i < shared->nr_of_philos)
 	{
 		if (shared->eaten[i]
-			< shared->number_of_times_each_philosopher_must_eat)
+			< shared->nr_of_times_each_philo_must_eat)
 			return (SUCCESS);
 		i++;
 	}

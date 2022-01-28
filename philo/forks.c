@@ -19,7 +19,7 @@ static int	fork1(t_philo *philo)
 
 static int	fork2(t_philo *philo)
 {
-	return ((philo->philo_i + 1) % philo->shared->number_of_forks);
+	return ((philo->philo_i + 1) % philo->shared->nr_of_forks);
 }
 
 int	really_take_forks(t_shared *shared, t_philo *philo)
@@ -33,7 +33,7 @@ int	really_take_forks(t_shared *shared, t_philo *philo)
 			return (ERROR);
 		philo->forks_in_hand = 1;
 	}
-	if (shared->number_of_forks > 1)
+	if (shared->nr_of_forks > 1)
 	{
 		if (ft_mutex_lock(&shared->forks[fork2(philo)]))
 			return (ERROR);
