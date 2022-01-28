@@ -1,3 +1,5 @@
+philo/philosophers_test
+philo/socrates
 *.o
 a.out
 my_*

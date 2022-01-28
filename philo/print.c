@@ -6,16 +6,27 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/27 11:26:06 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 12:16:07 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/28 11:04:13 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 #include <stdio.h>
+#include <unistd.h>
+
+int	ft_strlen(char *str)
+{
+	int	i;
+
+	i = 0;
+	while (str[i])
+		i++;
+	return (i);
+}
 
 int	print_error(char *str)
 {
-	printf("%s", str);
+	write(2, str, ft_strlen(str));
 	return (1);
 }
 
