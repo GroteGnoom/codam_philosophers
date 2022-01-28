@@ -6,14 +6,14 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:44:06 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 12:28:57 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/28 12:00:07 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 #include <stdio.h>
 
-int	die(t_shared *shared, t_philo *philo, long now)
+static int	die(t_shared *shared, t_philo *philo, long now)
 {
 	shared->one_dead = 1;
 	if (ft_mutex_lock(&shared->print_butler))

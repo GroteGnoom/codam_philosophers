@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/28 11:39:34 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/28 12:02:11 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,7 @@ void	*start_routine(void *philo_void)
 	return (NULL);
 }
 
-void	free_everything(t_shared shared, t_philo *philo, pthread_t *threads)
+static void	free_everything(t_shared shared, t_philo *philo, pthread_t *threads)
 {
 	free(shared.forks);
 	free(shared.forks_2);

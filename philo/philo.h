@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:27:42 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/28 11:16:40 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/28 12:03:27 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,7 +70,6 @@ int		checked_print(t_shared *shared, t_philo *philo, char *s);
 
 int		check_everybody_eaten(t_shared *shared);
 int		check_death(t_shared *shared, t_philo *philo);
-int		die(t_shared *shared, t_philo *philo, long now);
 
 int		start_activity(enum e_activity new_activity, t_philo *philo);
 int		check_thinking(t_shared *shared, t_philo *philo);
@@ -84,7 +83,6 @@ int		initialize_threads(t_shared *shared,
 			t_philo *philo, pthread_t *threads);
 int		parse_args(t_shared *shared, int argc, char **argv);
 
-void	print_death_info(t_philo *philo);
 int		print_error(char *str);
 
 void	*start_routine(void *philo_void);

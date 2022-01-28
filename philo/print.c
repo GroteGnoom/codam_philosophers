@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/27 11:26:06 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/28 11:39:30 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/28 12:06:52 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-int	ft_strlen(char *str)
+static int	ft_strlen(char *str)
 {
 	int	i;
 
@@ -30,17 +30,6 @@ int	print_error(char *str)
 	return (1);
 }
 
-void	print_death_info(t_philo *philo)
-{
-	long	now;
-
-	now = get_time();
-	printf("id: %d, now: %ld last_ate: %ld, ttd: %d, dead_time: %ld\n",
-		philo->philo_i + 1, now,
-		philo->last_ate, philo->shared->time_to_die,
-		now - (philo->last_ate + philo->shared->time_to_die));
-}
-
 int	checked_print(t_shared *shared, t_philo *philo, char *s)
 {
 	long	now;
@@ -54,4 +43,3 @@ int	checked_print(t_shared *shared, t_philo *philo, char *s)
 		return (ERROR);
 	return (SUCCESS);
 }
-
