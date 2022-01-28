@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:47:01 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/27 13:15:07 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/28 13:49:11 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ void	init_philo(void *philo_void, t_shared **shared_p, t_philo **philo_p)
 	*philo_p = philo;
 }
 
-static void	alloc_shared(t_shared *shared)
+static int	alloc_shared(t_shared *shared)
 {
 	shared->forks = malloc(sizeof(*shared->forks)
 			* shared->nr_of_forks);
@@ -36,7 +36,8 @@ static void	alloc_shared(t_shared *shared)
 	shared->eaten = malloc(sizeof(*shared->eaten)
 			* shared->nr_of_philos);
 	if (!shared->forks || !shared->forks_2 || !shared->eaten)
-		exit(1);
+		return (print_error("Memory allocation failed\n"));
+	return (SUCCESS);
 }
 
 int	initialize_shared(t_shared *shared, int argc, char **argv)
@@ -49,7 +50,8 @@ int	initialize_shared(t_shared *shared, int argc, char **argv)
 	if (shared->nr_of_philos == 1)
 		shared->nr_of_forks = FORKS_FOR_ONE;
 	shared->one_dead = 0;
-	alloc_shared(shared);
+	if (alloc_shared(shared))
+		return (ERROR);
 	i = 0;
 	while (i < shared->nr_of_philos)
 		shared->eaten[i++] = 0;
