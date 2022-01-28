@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/28 11:37:15 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/28 11:39:34 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,20 +15,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-int	checked_print(t_shared *shared, t_philo *philo, char *s)
-{
-	long	now;
-
-	if (ft_mutex_lock(&shared->print_butler))
-		return (ERROR);
-	now = get_time();
-	if (philo->shared->allowed_to_print)
-		printf("%ld %d %s\n", now, philo->philo_i + 1, s);
-	if (ft_mutex_unlock(&shared->print_butler))
-		return (ERROR);
-	return (SUCCESS);
-}
 
 void	*start_routine(void *philo_void)
 {

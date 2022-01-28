@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/27 11:26:06 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/28 11:04:13 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/28 11:39:30 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,3 +40,18 @@ void	print_death_info(t_philo *philo)
 		philo->last_ate, philo->shared->time_to_die,
 		now - (philo->last_ate + philo->shared->time_to_die));
 }
+
+int	checked_print(t_shared *shared, t_philo *philo, char *s)
+{
+	long	now;
+
+	if (ft_mutex_lock(&shared->print_butler))
+		return (ERROR);
+	now = get_time();
+	if (philo->shared->allowed_to_print)
+		printf("%ld %d %s\n", now, philo->philo_i + 1, s);
+	if (ft_mutex_unlock(&shared->print_butler))
+		return (ERROR);
+	return (SUCCESS);
+}
+
