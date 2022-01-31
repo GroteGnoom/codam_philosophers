@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/28 12:45:08 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/01/31 17:34:59 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,8 +27,10 @@ void	*start_routine(void *philo_void)
 		if (check_everybody_eaten(shared))
 			break ;
 		usleep(10);
-		if (philo->activity == EATING || philo->activity == SLEEPING)
-			usleep(1000);
+		if (philo->activity == EATING && get_time() < philo->activity_started + shared->time_to_eat - 10)
+			usleep(9000);
+		if (philo->activity == SLEEPING && get_time() < philo->activity_started + shared->time_to_sleep - 10)
+			usleep(9000);
 		if (check_death(shared, philo))
 			break ;
 		if (check_thinking(shared, philo))
@@ -66,7 +68,7 @@ int	main(int argc, char **argv)
 		return (ERROR);
 	threads = malloc(sizeof(pthread_t) * shared.nr_of_philos);
 	philo = malloc(sizeof(*philo) * shared.nr_of_philos);
-	if (initialize_mutexes(&shared))
+	if (!threads || !philo || initialize_mutexes(&shared))
 		return (ERROR);
 	shared.allowed_to_print = 1;
 	if (initialize_threads(&shared, philo, threads))
