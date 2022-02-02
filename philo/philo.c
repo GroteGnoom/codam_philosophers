@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/02/02 13:28:11 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/02/02 13:45:15 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,7 @@ int	main(int argc, char **argv)
 	threads = malloc(sizeof(pthread_t) * shared.nr_of_philos);
 	philo = malloc(sizeof(*philo) * shared.nr_of_philos);
 	if (!threads || !philo || initialize_mutexes(&shared))
-		return (ERROR);
+		return (print_error("Memory allocation failed\n"));
 	shared.allowed_to_print = 1;
 	if (initialize_threads(&shared, philo, threads))
 		return (ERROR);
