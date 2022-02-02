@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:24:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/31 18:28:50 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/02/02 13:28:11 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,19 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+void	do_sleeps(t_shared *shared, t_philo *philo)
+{
+	usleep(10);
+	if (philo->activity == EATING
+		&& get_time() < philo->activity_started + shared->time_to_eat - 10
+		&& get_time() < philo->last_ate + shared->time_to_die - 10)
+		usleep(9000);
+	if (philo->activity == SLEEPING
+		&& get_time() < philo->activity_started + shared->time_to_sleep - 10
+		&& get_time() < philo->last_ate + shared->time_to_die - 10)
+		usleep(9000);
+}
+
 void	*start_routine(void *philo_void)
 {
 	t_shared		*shared;
@@ -24,13 +37,9 @@ void	*start_routine(void *philo_void)
 	init_philo(philo_void, &shared, &philo);
 	while (!shared->one_dead)
 	{
+		do_sleeps(shared, philo);
 		if (check_everybody_eaten(shared))
 			break ;
-		usleep(10);
-		if (philo->activity == EATING && get_time() < philo->activity_started + shared->time_to_eat - 10 && get_time() < philo->last_ate + shared->time_to_die - 10)
-			usleep(9000);
-		if (philo->activity == SLEEPING && get_time() < philo->activity_started + shared->time_to_sleep - 10 && get_time() < philo->last_ate + shared->time_to_die - 10)
-			usleep(9000);
 		if (check_death(shared, philo))
 			break ;
 		if (check_thinking(shared, philo))
