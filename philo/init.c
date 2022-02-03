@@ -6,84 +6,37 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:47:01 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/28 13:49:11 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/02/03 15:30:07 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
 #include <stdlib.h>
 
-void	init_philo(void *philo_void, t_shared **shared_p, t_philo **philo_p)
+int	allocate(t_shared *shared, t_philo **philo)
 {
-	t_shared		*shared;
-	t_philo			*philo;
+	int i;
 
-	philo = philo_void;
-	shared = philo->shared;
-	philo->forks_in_hand = 0;
-	philo->last_ate = get_time();
-	start_activity(THINKING, philo);
-	*shared_p = shared;
-	*philo_p = philo;
-}
-
-static int	alloc_shared(t_shared *shared)
-{
-	shared->forks = malloc(sizeof(*shared->forks)
-			* shared->nr_of_forks);
-	shared->forks_2 = malloc(sizeof(*shared->forks_2)
-			* shared->nr_of_forks);
-	shared->eaten = malloc(sizeof(*shared->eaten)
-			* shared->nr_of_philos);
-	if (!shared->forks || !shared->forks_2 || !shared->eaten)
-		return (print_error("Memory allocation failed\n"));
-	return (SUCCESS);
-}
-
-int	initialize_shared(t_shared *shared, int argc, char **argv)
-{
-	int	i;
-
-	if (parse_args(shared, argc, argv))
-		return (ERROR);
-	shared->nr_of_forks = shared->nr_of_philos;
-	if (shared->nr_of_philos == 1)
-		shared->nr_of_forks = FORKS_FOR_ONE;
-	shared->one_dead = 0;
-	if (alloc_shared(shared))
-		return (ERROR);
+	shared->forks = malloc(sizeof(*shared->forks) * shared->nr_of_philos);
+	if (!shared->forks)
+		return (print_error(ALLOC_FAILED));
 	i = 0;
 	while (i < shared->nr_of_philos)
-		shared->eaten[i++] = 0;
+		if (pthread_mutex_init(&shared->forks[i++].mut, NULL))
+			return (print_error(ALLOC_FAILED));
 	i = 0;
-	while (i < shared->nr_of_forks)
-		shared->forks_2[i++] = 1;
+	while (i < shared->nr_of_philos)
+		shared->forks[i++].i = 1;
+	*philo = malloc(sizeof(**philo) * shared->nr_of_philos);
+	if (!*philo)
+		return (print_error(ALLOC_FAILED));
+	if (pthread_mutex_init(&shared->stop.mut, NULL))
+		return (print_error(ALLOC_FAILED));
+	shared->stop.i = 0;
 	return (SUCCESS);
 }
 
-int	initialize_mutexes(t_shared *shared)
-{
-	int	i;
-	int	err;
-
-	i = 0;
-	while (i < shared->nr_of_forks)
-	{
-		err = ft_mutex_init(shared->forks + i);
-		if (err)
-			return (err);
-		i++;
-	}
-	err = ft_mutex_init(&shared->butler);
-	if (err)
-		return (err);
-	err = ft_mutex_init(&shared->print_butler);
-	if (err)
-		return (err);
-	return (SUCCESS);
-}
-
-int	initialize_threads(t_shared *shared, t_philo *philo, pthread_t *threads)
+int initialize_threads(t_shared *shared, t_philo *philo)
 {
 	int	i;
 	int	err;
@@ -93,7 +46,10 @@ int	initialize_threads(t_shared *shared, t_philo *philo, pthread_t *threads)
 	{
 		philo[i].shared = shared;
 		philo[i].philo_i = i;
-		err = pthread_create(threads + i, NULL, start_routine, &philo[i]);
+		philo[i].forks_in_hand = 0;
+		set(&philo[i].last_ate, get_time());
+		set(&philo[i].eaten, 0);
+		err = pthread_create(&philo[i].thread, NULL, start_routine, &philo[i]);
 		if (err)
 			return (err);
 		i++;

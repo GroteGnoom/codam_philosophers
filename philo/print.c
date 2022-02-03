@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/27 11:26:06 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/01/28 12:06:52 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/02/03 11:30:43 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,16 +30,8 @@ int	print_error(char *str)
 	return (1);
 }
 
-int	checked_print(t_shared *shared, t_philo *philo, char *s)
+void print(t_philo *philo, char *s)
 {
-	long	now;
-
-	if (ft_mutex_lock(&shared->print_butler))
-		return (ERROR);
-	now = get_time();
-	if (philo->shared->allowed_to_print)
-		printf("%ld %d %s\n", now, philo->philo_i + 1, s);
-	if (ft_mutex_unlock(&shared->print_butler))
-		return (ERROR);
-	return (SUCCESS);
+	printf("%ld %d %s\n", get_time(), philo->philo_i + 1, s);
 }
+

@@ -1,10 +1,10 @@
 NAME = philo
-SRC = philo.c ft_atoi.c death.c init.c time.c forks.c activities.c mutex.c \
+SRC = main.c ft_atoi.c init.c time.c forks.c\
 	  print.c parse.c
 OBJ = $(SRC:%.c=obj/%.o)
 ifdef DEBUG
 	CC=clang
-	FLAGS = -Wall -Wextra -fsanitize=thread -DDEBUG=1 -g
+	FLAGS = -Wall -Wextra -fsanitize=address -DDEBUG=1 -g
 else
 	CC=gcc
 	FLAGS = -Wall -Wextra -Werror
