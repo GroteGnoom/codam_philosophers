@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/02/03 11:32:05 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/02/04 10:01:06 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/02/04 12:01:34 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,12 +26,12 @@ int	fork2_nr(t_philo *philo)
 	return (philo->philo_i);
 }
 
-void	drop_fork(t_mut_int *fork)
+void	drop_fork(t_mut_int *fork, int *fork_in_hand)
 {
 	pthread_mutex_lock(&fork->mut);
 	fork->i = 1;
 	pthread_mutex_unlock(&fork->mut);
-	//philo->forks_in_hand--;
+	*fork_in_hand = 0;
 }
 
 void	try_to_take_fork(t_philo *philo, t_mut_int *fork, int *fork_in_hand)

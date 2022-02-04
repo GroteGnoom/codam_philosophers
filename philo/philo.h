@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:27:42 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/02/04 10:01:19 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/02/04 12:02:48 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,15 +53,15 @@ typedef struct s_philo {
 }	t_philo;
 
 int		ft_atoi2(const char *str, int *res);
-long	timeval_to_ms(struct timeval timeval);
 long	get_time(void);
+void	ft_sleep(t_shared *shared, long time);
 int		parse_args(t_shared *shared, int argc, char **argv);
 int		print_error(char *str);
 void	print(t_philo *philo, char *s);
 
 int		fork1_nr(t_philo *philo);
 int		fork2_nr(t_philo *philo);
-void	drop_fork(t_mut_int *fork);
+void	drop_fork(t_mut_int *fork, int *fork_in_hand);
 void	try_to_take_fork(t_philo *philo, t_mut_int *fork, int *fork_in_hand);
 int		initialize_threads(t_shared *shared, t_philo *philo);
 void	*start_routine(void *philo_void);

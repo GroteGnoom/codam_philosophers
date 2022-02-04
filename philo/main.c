@@ -1,9 +1,20 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        ::::::::            */
+/*   main.c                                             :+:    :+:            */
+/*                                                     +:+                    */
+/*   By: dnoom <marvin@codam.nl>                      +#+                     */
+/*                                                   +#+                      */
+/*   Created: 2022/02/04 11:55:29 by dnoom         #+#    #+#                 */
+/*   Updated: 2022/02/04 12:07:08 by dnoom         ########   odam.nl         */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "philo.h"
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-
 
 int	start_activity(enum e_activity new_activity, t_philo *philo)
 {
@@ -41,47 +52,22 @@ void	inc(t_mut_int *mi)
 	pthread_mutex_unlock(&mi->mut);
 }
 
-
-void ft_sleep(t_shared *shared, long time)
+void	try_to_eat(t_shared *shared, t_philo *philo)
 {
-	long start;
-	long now;
-	long left;
+	t_mut_int	*forks[2];
 
-	start = get_time();
-	now = get_time();
-	left = time - (now - start);
-	while (!check(&shared->stop) && left > 0)
-	{
-		if (left < 5)
-			usleep(left * 1000);
-		else
-			usleep(left * 700);
-		now = get_time();
-		left = time - (now - start);
-	}
-}
-
-void try_to_eat(t_shared *shared, t_philo *philo)
-{
-	t_mut_int *fork1;
-	t_mut_int *fork2;
-
-	fork1 = &shared->forks[fork1_nr(philo)];
-	fork2 = &shared->forks[fork2_nr(philo)];
+	forks[0] = &shared->forks[fork1_nr(philo)];
+	forks[1] = &shared->forks[fork2_nr(philo)];
 	start_activity(THINKING, philo);
 	while (!philo->fork1 || !philo->fork2)
 	{
 		if (check(&shared->stop))
-		{
-			//print(philo, "stopping");
 			return ;
-		}
 		usleep(100);
 		if (!philo->fork1)
-			try_to_take_fork(philo, fork1, &philo->fork1);
+			try_to_take_fork(philo, forks[0], &philo->fork1);
 		if (!philo->fork2)
-			try_to_take_fork(philo, fork2, &philo->fork2);
+			try_to_take_fork(philo, forks[1], &philo->fork2);
 	}
 	start_activity(EATING, philo);
 	set(&philo->last_ate, get_time());
@@ -90,10 +76,8 @@ void try_to_eat(t_shared *shared, t_philo *philo)
 	if (check(&shared->stop))
 		return ;
 	start_activity(SLEEPING, philo);
-	drop_fork(fork1);
-	drop_fork(fork2);
-	philo->fork1 = 0;
-	philo->fork2 = 0;
+	drop_fork(forks[0], &philo->fork1);
+	drop_fork(forks[1], &philo->fork2);
 	ft_sleep(shared, shared->time_to_sleep);
 }
 
@@ -112,13 +96,6 @@ void	*start_routine(void *philo_void)
 	}
 	return (NULL);
 }
-
-void	free_all(t_shared *shared, t_philo *philo)
-{
-	free(shared->forks);
-	free(philo);
-}
-
 
 void check_death_or_eaten(t_shared *shared, t_philo *philo)
 {
@@ -158,7 +135,7 @@ void check_death_or_eaten(t_shared *shared, t_philo *philo)
 		printf("%ld %d %s\n", tod, dead, "died");
 }
 
-int main(int argc, char **argv)
+int	main(int argc, char **argv)
 {
 	t_shared	shared;
 	t_philo		*philo;
@@ -171,7 +148,8 @@ int main(int argc, char **argv)
 	if (initialize_threads(&shared, philo))
 		return (ERROR);
 	check_death_or_eaten(&shared, philo);
-	free_all(&shared, philo);
+	free(shared.forks);
+	free(philo);
 }
 
 
