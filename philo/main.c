@@ -29,9 +29,9 @@ long	check(t_mut_int *mi)
 
 void	set(t_mut_int *mi, long i)
 {
-	pthread_mutex_lock(&mi->mut);
+	pthread_mutex_lock(&(mi->mut));
 	mi->i = i;
-	pthread_mutex_unlock(&mi->mut);
+	pthread_mutex_unlock(&(mi->mut));
 }
 
 void	inc(t_mut_int *mi)
@@ -60,7 +60,6 @@ void ft_sleep(t_shared *shared, long time)
 		now = get_time();
 		left = time - (now - start);
 	}
-	//printf("slept for %ld instead of %ld\n", get_time() - start, time);
 }
 
 void try_to_eat(t_shared *shared, t_philo *philo)
@@ -71,37 +70,30 @@ void try_to_eat(t_shared *shared, t_philo *philo)
 	fork1 = &shared->forks[fork1_nr(philo)];
 	fork2 = &shared->forks[fork2_nr(philo)];
 	start_activity(THINKING, philo);
-	while (1)
+	while (!philo->fork1 || !philo->fork2)
 	{
 		if (check(&shared->stop))
 		{
 			print(philo, "stopping");
 			return ;
 		}
-		usleep(1000);
-		if (!check(fork1) || !check(fork2))
-			continue;
-		try_to_take_fork(philo, fork1);
-		if (!philo->forks_in_hand)
-			continue;
-		try_to_take_fork(philo, fork2);
-		if (philo->forks_in_hand == 2)
-			break ;
-		drop_fork(philo, fork1);
+		usleep(100);
+		if (!philo->fork1)
+			try_to_take_fork(philo, fork1, &philo->fork1);
+		if (!philo->fork2)
+			try_to_take_fork(philo, fork2, &philo->fork2);
 	}
 	start_activity(EATING, philo);
 	set(&philo->last_ate, get_time());
 	inc(&philo->eaten);
 	ft_sleep(shared, shared->time_to_eat);
 	if (check(&shared->stop))
-	{
-		drop_fork(philo, fork1);
-		drop_fork(philo, fork2);
 		return ;
-	}
 	start_activity(SLEEPING, philo);
-	drop_fork(philo, fork1);
-	drop_fork(philo, fork2);
+	drop_fork(fork1);
+	drop_fork(fork2);
+	philo->fork1 = 0;
+	philo->fork2 = 0;
 	ft_sleep(shared, shared->time_to_sleep);
 }
 
@@ -112,6 +104,8 @@ void	*start_routine(void *philo_void)
 
 	philo = philo_void;
 	shared = philo->shared;
+	if (philo->philo_i % 2)
+		usleep(1000);
 	while (!check(&shared->stop))
 	{
 		try_to_eat(shared, philo);
@@ -140,15 +134,9 @@ void check_death_or_eaten(t_shared *shared, t_philo *philo)
 		while (i < shared->nr_of_philos)
 		{
 			if (check(&philo[i].last_ate) < get_time() - shared->time_to_die)
-			{
 				dead = i + 1;
-				break;
-			}
-			if (shared->nr_of_times_each_philo_must_eat < 0 || (check(&philo[i].eaten) < shared->nr_of_times_each_philo_must_eat))
-			{
+			if (all_eaten && (shared->nr_of_times_each_philo_must_eat < 0 || (check(&philo[i].eaten) < shared->nr_of_times_each_philo_must_eat)))
 				all_eaten = 0;
-				break;
-			}
 			i++;
 		}
 		if (dead || all_eaten)

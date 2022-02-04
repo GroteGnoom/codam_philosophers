@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:27:42 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/02/03 17:01:08 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/02/04 10:01:19 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,7 +46,8 @@ typedef struct s_philo {
 	enum e_activity	activity;
 	long			activity_started;
 	t_mut_int		last_ate;
-	int				forks_in_hand;
+	int				fork1;
+	int				fork2;
 	t_mut_int		eaten;
 	pthread_t		thread;
 }	t_philo;
@@ -60,8 +61,8 @@ void	print(t_philo *philo, char *s);
 
 int		fork1_nr(t_philo *philo);
 int		fork2_nr(t_philo *philo);
-void	drop_fork(t_philo *philo, t_mut_int *fork);
-void	try_to_take_fork(t_philo *philo, t_mut_int *fork);
+void	drop_fork(t_mut_int *fork);
+void	try_to_take_fork(t_philo *philo, t_mut_int *fork, int *fork_in_hand);
 int		initialize_threads(t_shared *shared, t_philo *philo);
 void	*start_routine(void *philo_void);
 int		allocate(t_shared *shared, t_philo **philo);

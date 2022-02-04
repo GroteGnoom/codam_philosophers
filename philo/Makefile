@@ -4,7 +4,7 @@ SRC = main.c ft_atoi.c init.c time.c forks.c\
 OBJ = $(SRC:%.c=obj/%.o)
 ifdef DEBUG
 	CC=clang
-	FLAGS = -Wall -Wextra -fsanitize=address -DDEBUG=1 -g
+	FLAGS = -Wall -Wextra -fsanitize=thread -DDEBUG=1 -g
 else
 	CC=gcc
 	FLAGS = -Wall -Wextra -Werror
