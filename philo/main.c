@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/02/04 11:55:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/02/04 12:07:08 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/02/04 12:13:27 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,30 +26,6 @@ int	start_activity(enum e_activity new_activity, t_philo *philo)
 	print(philo, words[new_activity]);
 	philo->activity_started = now;
 	return (SUCCESS);
-}
-
-long	check(t_mut_int *mi)
-{
-	long	i;
-
-	pthread_mutex_lock(&mi->mut);
-	i = mi->i;
-	pthread_mutex_unlock(&mi->mut);
-	return (i);
-}
-
-void	set(t_mut_int *mi, long i)
-{
-	pthread_mutex_lock(&(mi->mut));
-	mi->i = i;
-	pthread_mutex_unlock(&(mi->mut));
-}
-
-void	inc(t_mut_int *mi)
-{
-	pthread_mutex_lock(&mi->mut);
-	mi->i++;
-	pthread_mutex_unlock(&mi->mut);
 }
 
 void	try_to_eat(t_shared *shared, t_philo *philo)
@@ -97,44 +73,6 @@ void	*start_routine(void *philo_void)
 	return (NULL);
 }
 
-void check_death_or_eaten(t_shared *shared, t_philo *philo)
-{
-	int	i;
-	int	dead;
-	int	all_eaten;
-	long	tod;
-
-	while (1)
-	{
-		dead = 0;
-		all_eaten = 1;
-		i = 0;
-		while (i < shared->nr_of_philos)
-		{
-			if (check(&philo[i].last_ate) < get_time() - shared->time_to_die)
-			{
-				dead = i + 1;
-				tod = get_time();
-				break;
-			}
-			if (all_eaten && (shared->nr_of_times_each_philo_must_eat < 0 || (check(&philo[i].eaten) < shared->nr_of_times_each_philo_must_eat)))
-				all_eaten = 0;
-			i++;
-		}
-		if (dead || all_eaten)
-			break;
-		usleep(1000);
-	}
-	set(&shared->stop, 1);
-	i = 0;
-	while (i < shared->nr_of_philos)
-	{
-		pthread_join(philo[i++].thread, NULL);
-	}
-	if (dead)
-		printf("%ld %d %s\n", tod, dead, "died");
-}
-
 int	main(int argc, char **argv)
 {
 	t_shared	shared;
@@ -151,6 +89,3 @@ int	main(int argc, char **argv)
 	free(shared.forks);
 	free(philo);
 }
-
-
-

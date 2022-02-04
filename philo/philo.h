@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:27:42 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/02/04 12:02:48 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/02/04 12:11:46 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,7 @@ void	try_to_take_fork(t_philo *philo, t_mut_int *fork, int *fork_in_hand);
 int		initialize_threads(t_shared *shared, t_philo *philo);
 void	*start_routine(void *philo_void);
 int		allocate(t_shared *shared, t_philo **philo);
+void	check_death_or_eaten(t_shared *shared, t_philo *philo);
 
 long	check(t_mut_int *mi);
 void	set(t_mut_int *mi, long i);

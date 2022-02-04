@@ -1,6 +1,6 @@
 NAME = philo
 SRC = main.c ft_atoi.c init.c time.c forks.c\
-	  print.c parse.c
+	  print.c parse.c death.c mutex.c
 OBJ = $(SRC:%.c=obj/%.o)
 ifdef DEBUG
 	CC=clang
