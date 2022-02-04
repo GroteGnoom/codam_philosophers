@@ -6,31 +6,30 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 13:27:42 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/02/04 12:11:46 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/02/04 13:47:58 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef PHILO_H
 # define PHILO_H
 
-#include <pthread.h>
-#include <sys/time.h>
+# include <pthread.h>
+# include <sys/time.h>
 
-#define ALLOC_FAILED "Memory allocation failed.\n"
+# define ALLOC_FAILED "Memory allocation failed.\n"
 
 typedef struct s_mut_int{
 	pthread_mutex_t	mut;
 	volatile long	i;
-} t_mut_int;
-
+}	t_mut_int;
 
 typedef struct s_shared {
-	int		nr_of_philos;
-	int		time_to_die;
-	int		time_to_eat;
-	int		time_to_sleep;
-	int		nr_of_times_each_philo_must_eat;
-	t_mut_int *forks;
+	int			nr_of_philos;
+	int			time_to_die;
+	int			time_to_eat;
+	int			time_to_sleep;
+	int			min_eats;
+	t_mut_int	*forks;
 	t_mut_int	stop;
 }	t_shared;
 

@@ -1,42 +1,37 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        ::::::::            */
-/*   print.c                                            :+:    :+:            */
+/*   mutex.c                                            :+:    :+:            */
 /*                                                     +:+                    */
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
-/*   Created: 2022/01/27 11:26:06 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/02/04 13:47:10 by dnoom         ########   odam.nl         */
+/*   Created: 2022/02/04 12:10:28 by dnoom         #+#    #+#                 */
+/*   Updated: 2022/02/04 12:11:28 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philo.h"
-#include <stdio.h>
-#include <unistd.h>
 
-static int	ft_strlen(char *str)
+long	check(t_mut_int *mi)
 {
-	int	i;
+	long	i;
 
-	i = 0;
-	while (str[i])
-		i++;
+	pthread_mutex_lock(&mi->mut);
+	i = mi->i;
+	pthread_mutex_unlock(&mi->mut);
 	return (i);
 }
 
-int	print_error(char *str)
+void	set(t_mut_int *mi, long i)
 {
-	write(2, str, ft_strlen(str));
-	return (1);
+	pthread_mutex_lock(&(mi->mut));
+	mi->i = i;
+	pthread_mutex_unlock(&(mi->mut));
 }
 
-void	print(t_philo *philo, char *s)
+void	inc(t_mut_int *mi)
 {
-	t_shared	*shared;
-
-	shared = philo->shared;
-	pthread_mutex_lock(&shared->stop.mut);
-	if (!shared->stop.i)
-		printf("%ld %d %s\n", get_time(), philo->philo_i + 1, s);
-	pthread_mutex_unlock(&shared->stop.mut);
+	pthread_mutex_lock(&mi->mut);
+	mi->i++;
+	pthread_mutex_unlock(&mi->mut);
 }

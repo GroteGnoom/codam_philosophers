@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/01/26 16:47:01 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/02/04 11:05:42 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/02/04 13:37:47 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,24 +15,18 @@
 
 int	allocate(t_shared *shared, t_philo **philo)
 {
-	int i;
+	int	i;
 
 	shared->forks = malloc(sizeof(*shared->forks) * shared->nr_of_philos);
-	if (!shared->forks)
-		return (print_error(ALLOC_FAILED));
-	i = 0;
-	while (i < shared->nr_of_philos)
-		if (pthread_mutex_init(&shared->forks[i++].mut, NULL))
-			return (print_error(ALLOC_FAILED));
-	i = 0;
-	while (i < shared->nr_of_philos)
-		shared->forks[i++].i = 1;
 	*philo = malloc(sizeof(**philo) * shared->nr_of_philos);
-	if (!*philo)
+	if (!*philo || !shared->forks)
 		return (print_error(ALLOC_FAILED));
 	i = 0;
 	while (i < shared->nr_of_philos)
 	{
+		shared->forks[i].i = 1;
+		if (pthread_mutex_init(&shared->forks[i].mut, NULL))
+			return (print_error(ALLOC_FAILED));
 		if (pthread_mutex_init(&(*philo)[i].last_ate.mut, NULL))
 			return (print_error(ALLOC_FAILED));
 		if (pthread_mutex_init(&(*philo)[i++].eaten.mut, NULL))
@@ -44,7 +38,7 @@ int	allocate(t_shared *shared, t_philo **philo)
 	return (SUCCESS);
 }
 
-int initialize_threads(t_shared *shared, t_philo *philo)
+int	initialize_threads(t_shared *shared, t_philo *philo)
 {
 	int	i;
 	int	err;
@@ -54,8 +48,8 @@ int initialize_threads(t_shared *shared, t_philo *philo)
 	{
 		philo[i].shared = shared;
 		philo[i].philo_i = i;
-		philo[i].fork1= 0;
-		philo[i].fork2= 0;
+		philo[i].fork1 = 0;
+		philo[i].fork2 = 0;
 		set(&philo[i].last_ate, get_time());
 		set(&philo[i].eaten, 0);
 		err = pthread_create(&philo[i].thread, NULL, start_routine, &philo[i]);

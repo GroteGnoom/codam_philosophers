@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/02/04 11:55:29 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/02/04 12:13:27 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/02/04 13:42:08 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ void	*start_routine(void *philo_void)
 	philo = philo_void;
 	shared = philo->shared;
 	if (philo->philo_i % 2)
-		usleep(1000);
+		ft_sleep(shared, shared->time_to_eat);
 	while (!check(&shared->stop))
 	{
 		try_to_eat(shared, philo);
