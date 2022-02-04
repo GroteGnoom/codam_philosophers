@@ -74,7 +74,7 @@ void try_to_eat(t_shared *shared, t_philo *philo)
 	{
 		if (check(&shared->stop))
 		{
-			print(philo, "stopping");
+			//print(philo, "stopping");
 			return ;
 		}
 		usleep(100);
@@ -125,6 +125,7 @@ void check_death_or_eaten(t_shared *shared, t_philo *philo)
 	int	i;
 	int	dead;
 	int	all_eaten;
+	long	tod;
 
 	while (1)
 	{
@@ -134,7 +135,11 @@ void check_death_or_eaten(t_shared *shared, t_philo *philo)
 		while (i < shared->nr_of_philos)
 		{
 			if (check(&philo[i].last_ate) < get_time() - shared->time_to_die)
+			{
 				dead = i + 1;
+				tod = get_time();
+				break;
+			}
 			if (all_eaten && (shared->nr_of_times_each_philo_must_eat < 0 || (check(&philo[i].eaten) < shared->nr_of_times_each_philo_must_eat)))
 				all_eaten = 0;
 			i++;
@@ -150,7 +155,7 @@ void check_death_or_eaten(t_shared *shared, t_philo *philo)
 		pthread_join(philo[i++].thread, NULL);
 	}
 	if (dead)
-		print(&philo[dead - 1], "died");
+		printf("%ld %d %s\n", tod, dead, "died");
 }
 
 int main(int argc, char **argv)
