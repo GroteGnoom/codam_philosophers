@@ -6,7 +6,7 @@
 /*   By: dnoom <marvin@codam.nl>                      +#+                     */
 /*                                                   +#+                      */
 /*   Created: 2022/02/04 12:09:15 by dnoom         #+#    #+#                 */
-/*   Updated: 2022/02/04 13:44:35 by dnoom         ########   odam.nl         */
+/*   Updated: 2022/02/07 09:52:38 by dnoom         ########   odam.nl         */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,8 @@ void	stop(t_shared *shared, t_philo *philo, int dead, long tod)
 	int	i;
 
 	i = 0;
+	if (!dead)
+		set(&shared->stop, 1);
 	while (i < shared->nr_of_philos)
 	{
 		pthread_join(philo[i++].thread, NULL);
@@ -48,7 +50,9 @@ void	check_death_or_eaten(t_shared *shared, t_philo *philo)
 			}
 			if (all_eaten && (shared->min_eats < 0
 					|| (check(&philo[i].eaten) < shared->min_eats)))
+			{
 				all_eaten = 0;
+			}
 			i++;
 		}
 		usleep(1000);
